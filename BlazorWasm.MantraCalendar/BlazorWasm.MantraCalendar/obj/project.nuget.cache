@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "h8iCIlcNBjI=",
+  "dgSpecHash": "mLaBxYFB42M=",
   "success": true,
-  "projectFilePath": "C:\\FILES\\pj\\Mantra Calendar\\BlazorWasm.MantraCalendar\\BlazorWasm.MantraCalendar\\BlazorWasm.MantraCalendar.csproj",
+  "projectFilePath": "C:\\FILES\\pj\\mantra-calendar\\BlazorWasm.MantraCalendar\\BlazorWasm.MantraCalendar\\BlazorWasm.MantraCalendar.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\littl\\.nuget\\packages\\microsoft.aspnetcore.authorization\\8.0.19\\microsoft.aspnetcore.authorization.8.0.19.nupkg.sha512",
     "C:\\Users\\littl\\.nuget\\packages\\microsoft.aspnetcore.components\\8.0.19\\microsoft.aspnetcore.components.8.0.19.nupkg.sha512",

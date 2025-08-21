@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("BlazorWasm.MantraCalendar")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+9f71a29240d76ce2bfd3c09d81cbef76c4775a4e")]
 [assembly: System.Reflection.AssemblyProductAttribute("BlazorWasm.MantraCalendar")]
 [assembly: System.Reflection.AssemblyTitleAttribute("BlazorWasm.MantraCalendar")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

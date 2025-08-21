@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\FILES\\pj\\Mantra Calendar\\BlazorWasm.MantraCalendar\\BlazorWasm.MantraCalendar\\BlazorWasm.MantraCalendar.csproj": {}
+    "C:\\FILES\\pj\\mantra-calendar\\BlazorWasm.MantraCalendar\\BlazorWasm.MantraCalendar\\BlazorWasm.MantraCalendar.csproj": {}
   },
   "projects": {
-    "C:\\FILES\\pj\\Mantra Calendar\\BlazorWasm.MantraCalendar\\BlazorWasm.MantraCalendar\\BlazorWasm.MantraCalendar.csproj": {
+    "C:\\FILES\\pj\\mantra-calendar\\BlazorWasm.MantraCalendar\\BlazorWasm.MantraCalendar\\BlazorWasm.MantraCalendar.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\FILES\\pj\\Mantra Calendar\\BlazorWasm.MantraCalendar\\BlazorWasm.MantraCalendar\\BlazorWasm.MantraCalendar.csproj",
+        "projectUniqueName": "C:\\FILES\\pj\\mantra-calendar\\BlazorWasm.MantraCalendar\\BlazorWasm.MantraCalendar\\BlazorWasm.MantraCalendar.csproj",
         "projectName": "BlazorWasm.MantraCalendar",
-        "projectPath": "C:\\FILES\\pj\\Mantra Calendar\\BlazorWasm.MantraCalendar\\BlazorWasm.MantraCalendar\\BlazorWasm.MantraCalendar.csproj",
+        "projectPath": "C:\\FILES\\pj\\mantra-calendar\\BlazorWasm.MantraCalendar\\BlazorWasm.MantraCalendar\\BlazorWasm.MantraCalendar.csproj",
         "packagesPath": "C:\\Users\\littl\\.nuget\\packages\\",
-        "outputPath": "C:\\FILES\\pj\\Mantra Calendar\\BlazorWasm.MantraCalendar\\BlazorWasm.MantraCalendar\\obj\\",
+        "outputPath": "C:\\FILES\\pj\\mantra-calendar\\BlazorWasm.MantraCalendar\\BlazorWasm.MantraCalendar\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
