@@ -1,7 +1,52 @@
 ﻿@page "/"
+@using BlazorWasm.MantraCalendar.Services
+@using Blazored.LocalStorage
 
-<PageTitle>Home</PageTitle>
+@inject MantraScheduleService MantraScheduleService
+@inject ILocalStorageService LocalStorage
 
-<h1>Hello, world!</h1>
+<h3>Mantra Practice Calendar</h3>
 
-Welcome to your new app.
+<div class="mantra-calendar">
+    @foreach (var mantra in mantras)
+    {
+        <div class="mantra-category">
+            <h4>@mantra.MantraName</h4>
+            <p>@mantra.Description</p>
+            <ul>
+                @foreach (var date in mantra.PracticeDates)
+                {
+                    string id = $"practice_{mantra.MantraName}_{date.ToString("yyyyMMdd")}";
+                    <li class="practice-day">
+                        <input type="checkbox" id="@id" @bind="@practiceDays[(mantra.MantraName + date.ToString(" yyyyMMdd"))]" />
+                        <label for="@id">@date.ToString("dd.MM.yyyy")</label>
+                    </li>
+                }
+            </ul>
+        </div>
+    }
+</div>
+
+@code {
+    private List<MantraScheduleModel> mantras;
+    private Dictionary<string, bool> practiceDays = new();
+
+    protected override void OnInitialized()
+    {
+        mantras = MantraScheduleService.GetMantras();
+    }
+
+    private async Task SaveProgress()
+    {
+        await LocalStorage.SetItemAsync("practiceProgress", practiceDays);
+    }
+
+    private async Task LoadProgress()
+    {
+        practiceDays = await LocalStorage.GetItemAsync<Dictionary<string, bool>>("practiceProgress");
+        if (practiceDays == null)
+        {
+            practiceDays = new Dictionary<string, bool>();
+        }
+    }
+}

@@ -1,0 +1,83 @@
+﻿@page "/"
+@using BlazorWasm.MantraCalendarApp.Services
+@using Blazored.LocalStorage
+
+@inject MantraScheduleService MantraScheduleService
+@inject ILocalStorageService LocalStorage
+
+<h3>Mantra Practice Calendar</h3>
+
+<div class="mantra-calendar">
+    @foreach (var group in groupedMantras)
+    {
+        <div class="mantra-category-group">
+            <h4>@group.Key</h4>
+            @foreach (var mantra in group.Value)
+            {
+                <div class="mantra-category">
+                    <h5>@mantra.MantraName</h5>
+                    <p>@mantra.Description</p>
+                    <ul>
+                        @foreach (var date in mantra.PracticeDates)
+                        {
+                            string key = mantra.MantraName + date.ToString("yyyyMMdd");
+                            <li class="practice-day">
+                                <input type="checkbox" id="practice_@key" @bind="@practiceDays[key]" />
+                                <label for="practice_@key">@date.ToString("dd.MM.yyyy")</label>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<button @onclick="SaveProgress">SaveProgress</button>
+
+@code {
+    private List<MantraScheduleModel> mantras;
+    private Dictionary<string, bool> practiceDays = new();
+    private Dictionary<string, List<MantraScheduleModel>> groupedMantras = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        mantras = MantraScheduleService.GetMantras();
+        GroupMantrasByDateRange();
+        await LoadProgress();
+    }
+
+    private void GroupMantrasByDateRange()
+    {
+        groupedMantras = mantras
+            .GroupBy(m => $"{m.StartDate.ToString("dd.MM.yyyy")} - {m.EndDate.ToString("dd.MM.yyyy")}")
+            .ToDictionary(g => g.Key, g => g.ToList());
+    }
+
+    private async Task SaveProgress()
+    {
+        await LocalStorage.SetItemAsync("practiceProgress", practiceDays);
+    }
+
+    private async Task LoadProgress()
+    {
+        var savedProgress = await LocalStorage.GetItemAsync<Dictionary<string, bool>>("practiceProgress");
+
+        if (savedProgress != null)
+        {
+            practiceDays = savedProgress;
+        }
+
+        foreach (var mantra in mantras)
+        {
+            foreach (var date in mantra.PracticeDates)
+            {
+                string key = mantra.MantraName + date.ToString("yyyyMMdd");
+                if (!practiceDays.ContainsKey(key))
+                {
+                    practiceDays[key] = false;
+                }
+            }
+        }
+    }
+}
