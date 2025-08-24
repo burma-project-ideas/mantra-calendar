@@ -1,0 +1,48 @@
+﻿@page "/edit-mantra-popup"
+@using BlazorWasm.MantraCalendarApp.Services
+@using Blazored.LocalStorage
+@inject DialogService DialogService
+
+<RadzenTemplateForm TItem="Appointment" Data="@model" Submit="@OnSubmit">
+    <RadzenStack Gap="1rem">
+        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Wrap="FlexWrap.Wrap">
+            <RadzenLabel Text="Mantra Name" Style="width: 6rem;" />
+            <RadzenTextBox @bind-Value="@model.Text" Name="Text" Style="width: 12rem;" Disabled="true" />
+        </RadzenStack>
+
+        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Wrap="FlexWrap.Wrap">
+            <RadzenLabel Text="Description" Style="width: 6rem;" />
+            <RadzenTextBox @bind-Value="@model.Description" Name="Description" Style="width: 12rem;" Disabled="true" />
+        </RadzenStack>
+
+        <!-- Loop through each mantra for this day -->
+        @foreach (var mantra in model.Mantras)
+        {
+            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Wrap="FlexWrap.Wrap">
+                <RadzenLabel Text="@mantra.Name" Style="width: 6rem;" />
+                <RadzenToggleButton @bind-Value="mantra.IsPracticed" Text="Complete" Icon="check_circle" Disabled="@mantra.IsPracticed" />
+            </RadzenStack>
+        }
+
+        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End">
+            <RadzenButton ButtonType="ButtonType.Submit" Text="Save" />
+        </RadzenStack>
+    </RadzenStack>
+</RadzenTemplateForm>
+
+@code {
+    [Parameter]
+    public Appointment Appointment { get; set; }
+
+    Appointment model = new Appointment();
+
+    protected override void OnParametersSet()
+    {
+        model = Appointment ?? new Appointment();
+    }
+
+    void OnSubmit(Appointment updatedAppointment)
+    {
+        DialogService.Close(updatedAppointment); // Close and pass the updated appointment back
+    }
+}
