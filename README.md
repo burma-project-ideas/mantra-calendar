@@ -173,3 +173,20 @@ A return-to-tab refresh arriving during a check queues another check, keeping de
 blocked until the latest check finishes. Closing during a pending check or export stops
 further dialog updates. Checks do not lock other tabs; another tab can still change data
 after a completed check.
+
+## Interface design
+
+DESIGN.md is the visual source of truth, based on the stitch-design-taste skill. The calendar
+leads the page; schedule, recovery and backup tools sit beside it on desktop and below it on
+mobile. Manage schedules jumps directly to those tools. Geist is self-hosted under the OFL
+license in wwwroot/fonts. Motion respects prefers-reduced-motion.
+
+Additional browser checks require an externally available playwright-core module, installed
+Edge, and the running app at localhost:5094:
+
+    node tests/ResponsiveUi.checks.cjs
+    node tests/DialogBackup.checks.cjs
+    node tests/CompleteDeleteFlow.checks.cjs
+
+Checks use fresh browser contexts with synthetic schedules. Screenshot output is excluded
+from Git. See specs/019-stitch-calendar-redesign/spec.md for the validation record.
