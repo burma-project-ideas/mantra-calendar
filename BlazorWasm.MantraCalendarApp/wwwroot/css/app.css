@@ -7,6 +7,9 @@
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
 html, body { margin: 0; background: #F8FAF9; color: var(--ink); font-family: Geist, 'Myanmar Text', sans-serif; font-size: 16px; }
+html[lang="my"] h1 { letter-spacing: 0; line-height: 1.7; font-size: clamp(24px,3.2vw,38px); }
+html[lang="my"] .eyebrow, html[lang="my"] .brand-caption, html[lang="my"] .summary-label { letter-spacing: 0; line-height: 1.8; }
+html[lang="my"] .period-label { white-space: normal; }
 body { --rz-primary: #315D4A; --rz-primary-light: #537B67; --rz-primary-dark: #254737; --rz-primary-lighter: #EDF3EF; --rz-on-primary: #FFFFFF; }
 button, input, select, textarea { font-family: inherit; }
 a { color: var(--green); }

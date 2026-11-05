@@ -1,19 +1,37 @@
+@inject BlazorWasm.MantraCalendarApp.Services.UiLanguage L
 @inherits LayoutComponentBase
+@implements IDisposable
 <HeadContent>
     <RadzenTheme Theme="material" />
 </HeadContent>
 <RadzenComponents />
-<a class="skip-link" href="#practice-calendar">Skip to calendar</a>
+<a class="skip-link" href="#practice-calendar">@L["Skip to calendar"]</a>
 <div class="app-shell">
     <header class="app-header">
-        <a class="brand" href="" aria-label="Mantra Practice Calendar home">
+        <a class="brand" href="" aria-label="@L["Mantra Practice Calendar home"]">
             <span class="brand-mark" aria-hidden="true"><RadzenIcon Icon="spa" /></span>
-            <span>mantra<span class="brand-caption">A DAILY PRACTICE</span></span>
+            <span>mantra<span class="brand-caption">@L["A DAILY PRACTICE"]</span></span>
         </a>
-        <span class="local-note"><RadzenIcon Icon="check_circle_outline" aria-hidden="true" /> Stored in this browser</span>
+        <div class="header-tools">
+            <span class="local-note"><RadzenIcon Icon="check_circle_outline" aria-hidden="true" /> @L["Stored in this browser"]</span>
+            <label class="language-picker" for="ui-language">@L["Language"]
+                <select id="ui-language" @bind:get="L.Language" @bind:set="L.SetAsync" disabled="@L.Saving">
+                    <option value="mm" lang="my">မြန်မာ</option>
+                    <option value="en" lang="en">English</option>
+                </select>
+            </label>
+        </div>
     </header>
+    @if (L.Error is not null) { <p class="language-error" role="alert">@L[L.Error]</p> }
+    @if (L.Saving) { <p role="status">@L["Saving language…"]</p> }
     <main id="main-content" class="app-main">
         @Body
     </main>
-    <footer class="app-footer">A practice you can return to.<span>Stored in this browser. Export a backup to keep a copy.</span></footer>
+    <footer class="app-footer">@L["A practice you can return to."]<span>@L["Stored in this browser. Export a backup to keep a copy."]</span></footer>
 </div>
+
+@code {
+    protected override void OnInitialized() => L.Changed += LanguageChanged;
+    private void LanguageChanged() => _ = InvokeAsync(StateHasChanged);
+    public void Dispose() => L.Changed -= LanguageChanged;
+}

@@ -13,10 +13,13 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
 
 builder.Services.AddSingleton<MantraScheduleService>();
+builder.Services.AddScoped<UiLanguage>();
 
 
 
 builder.Services.AddRadzenComponents();
 
-await builder.Build().RunAsync();
+var host = builder.Build();
+await host.Services.GetRequiredService<UiLanguage>().InitializeAsync();
+await host.RunAsync();
 

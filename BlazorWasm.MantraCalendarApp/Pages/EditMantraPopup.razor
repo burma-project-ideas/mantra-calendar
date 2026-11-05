@@ -1,7 +1,8 @@
+@inject BlazorWasm.MantraCalendarApp.Services.UiLanguage L
 @using BlazorWasm.MantraCalendarApp.Services
 @inject DialogService DialogService
 
-<p class="dialog-intro">Take a moment to reflect. Mark the mantras you practiced today.</p>
+<p class="dialog-intro">@L["Take a moment to reflect. Mark the mantras you practiced today."]</p>
 <RadzenTemplateForm TItem="Appointment" Data="@model" Submit="@OnSubmit">
     <div class="mantra-list">
         @for (var i = 0; i < model.Mantras.Count; i++)
@@ -15,8 +16,8 @@
         }
     </div>
     <div class="dialog-actions">
-        <RadzenButton ButtonType="ButtonType.Button" ButtonStyle="ButtonStyle.Light" Text="Cancel" Click="@(() => DialogService.Close())" />
-        <RadzenButton ButtonType="ButtonType.Submit" Text="Save practice" />
+        <RadzenButton ButtonType="ButtonType.Button" ButtonStyle="ButtonStyle.Light" Text="@L["Cancel"]" Click="@(() => DialogService.Close())" />
+        <RadzenButton ButtonType="ButtonType.Submit" Text="@L["Save practice"]" />
     </div>
 </RadzenTemplateForm>
 

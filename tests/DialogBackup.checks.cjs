@@ -23,6 +23,8 @@ const assert = require('node:assert/strict');
             });db.close();
         });
         await page.goto('http://localhost:5094/');
+        await page.locator('#ui-language').selectOption('en');
+        await page.getByRole('button',{name:'Use schedule',exact:true}).waitFor();
         const picker=page.getByRole('combobox',{name:'Deleted schedule',exact:true});
         await picker.waitFor();
         await page.waitForFunction(()=>{const b=document.querySelector('.restore-deleted');return b&&!b.disabled;});

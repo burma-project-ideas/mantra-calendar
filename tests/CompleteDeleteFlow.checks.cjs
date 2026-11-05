@@ -22,6 +22,8 @@ const path=require('node:path');
    assert.equal(JSON.parse(text).version,2);return text;
   };
   await page.goto('http://localhost:5094/');await ready();
+  await page.locator('#ui-language').selectOption('en');
+  await page.getByRole('button',{name:'Use schedule',exact:true}).waitFor();
   const fixture={format:'mantra-practice-calendar',version:2,activeStartDate:'2030-01-01',schedules:[
    {startDate:'2030-01-01',progress:[{date:'2030-01-01T00:00:00',mantraName:'အရဟံ',isPracticed:true}]},
    {startDate:'2031-01-01',progress:[]}

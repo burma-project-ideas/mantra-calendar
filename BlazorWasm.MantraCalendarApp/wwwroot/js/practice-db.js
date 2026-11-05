@@ -1,6 +1,27 @@
 const databaseName = "mantra-practice-calendar";
 const storeName = "journal";
 
+export async function getLanguage() {
+    const language = await transaction("readonly", store => store.get("language"));
+    return language === "en" ? "en" : "mm";
+}
+
+export async function setLanguage(language) {
+    if (language !== "en" && language !== "mm") throw new Error("Unsupported language.");
+    await transaction("readwrite", store => store.put(language, "language"));
+    setDocumentLanguage(language);
+}
+
+export function setDocumentLanguage(language) {
+    document.documentElement.lang = language === "en" ? "en" : "my";
+    const error = document.querySelector("#app-error-message");
+    const reload = document.querySelector("#blazor-error-ui .reload");
+    const dismiss = document.querySelector("#blazor-error-ui .dismiss");
+    if (error) error.textContent = language === "en" ? "An unhandled error has occurred." : "အမှားတစ်ခု ဖြစ်ပေါ်ခဲ့ပါသည်။";
+    if (reload) reload.textContent = language === "en" ? "Reload" : "ပြန်ဖွင့်ရန်";
+    if (dismiss) dismiss.setAttribute("aria-label", language === "en" ? "Dismiss error" : "ပိတ်ရန်");
+}
+
 function openDatabase() {
     return new Promise((resolve, reject) => {
         const request = indexedDB.open(databaseName, 1);
@@ -327,7 +348,7 @@ export async function exportBackup() {
     return validateBackup({ format: "mantra-practice-calendar", version: 2, activeStartDate, schedules, deletedSchedules });
 }
 
-export async function downloadBackup() {
+export async function downloadBackup(locale) {
     const backup = await exportBackup();
     const fingerprint = await backupFingerprint(backup);
     const text = JSON.stringify(backup, null, 2);
@@ -346,7 +367,7 @@ export async function downloadBackup() {
         store.put(exportedAt, "lastBackupExportedAt");
         store.put(fingerprint, "lastBackupFingerprint");
     });
-    return new Date(exportedAt).toLocaleString();
+    return new Date(exportedAt).toLocaleString(locale);
 }
 
 async function backupFingerprint(backup) {
@@ -361,10 +382,10 @@ export async function backupChangesWarning() {
         : "Schedules, progress or recovery history have changed since the last backup was exported. Export a new backup before permanently deleting recovery history.";
 }
 
-export async function lastBackupExportedAt() {
+export async function lastBackupExportedAt(locale) {
     const value = await transaction("readonly", store => store.get("lastBackupExportedAt"));
     return typeof value === "string" && Number.isFinite(Date.parse(value))
-        ? new Date(value).toLocaleString() : null;
+        ? new Date(value).toLocaleString(locale) : null;
 }
 
 export function watchBackupTab(callback) {

@@ -1,40 +1,41 @@
+@inject BlazorWasm.MantraCalendarApp.Services.UiLanguage L
 @inject DialogService DialogService
 @implements IAsyncDisposable
 
 <div @onkeydown="OnKeyDown">
     @if (EmptyAll)
     {
-    <p>Permanently remove <strong>@RecoveryCount recovery @(RecoveryCount == 1 ? "copy" : "copies")</strong> from Recently deleted?</p>
-    <p>The listed recovery history will be permanently removed from this browser and cannot be restored from Recently deleted afterward. Saved schedules and exported backup files will be kept. Recovery would require a backup that already contains these copies. Copies added elsewhere while this confirmation is open will be kept.</p>
+    <p>@L.Format("Permanently remove {0} recovery copies from Recently deleted?", RecoveryCount)</p>
+    <p>@L["The listed recovery history will be permanently removed from this browser and cannot be restored from Recently deleted afterward. Saved schedules and exported backup files will be kept. Recovery would require a backup that already contains these copies. Copies added elsewhere while this confirmation is open will be kept."]</p>
     }
     else
     {
-    <p>@(Permanent ? "Permanently delete the recovery copy for" : "Delete the schedule from") <strong>@StartDate.ToString("d MMM yyyy") to @StartDate.AddDays(89).ToString("d MMM yyyy")</strong>?</p>
+    <p>@(Permanent ? L["Permanently delete the recovery copy for"] : L["Delete the schedule from"]) <strong>@L.Date(StartDate) @L["to"] @L.Date(StartDate.AddDays(89))</strong>?</p>
     @if (Permanent)
     {
-    <p>This copy contains @CompletedCount completed mantras. Its recovery history will be permanently removed from this browser. It cannot be restored from Recently deleted afterward. Saved schedules, other deleted copies and exported backup files will be kept. Recovery would require a backup that already contains this copy.</p>
+    <p>@L.Format("This copy contains {0} completed mantras. Its recovery history will be permanently removed from this browser. It cannot be restored from Recently deleted afterward. Saved schedules, other deleted copies and exported backup files will be kept. Recovery would require a backup that already contains this copy.", CompletedCount)</p>
     }
     else
     {
-    <p>This schedule and its progress will move to Recently deleted schedules, where you can restore them later, even after reloading. Other saved schedules, deleted schedules and exported backup files will be kept.</p>
+    <p>@L["This schedule and its progress will move to Recently deleted schedules, where you can restore them later, even after reloading. Other saved schedules, deleted schedules and exported backup files will be kept."]</p>
     }
     }
     @if (Permanent || EmptyAll)
     {
         <div class="backup-action" aria-busy="@refreshing.ToString().ToLowerInvariant()">
-            @if (refreshing) { <p class="backup-checking" role="status">Checking backup status…</p> }
-            <p class="last-backup">@lastBackup</p>
-            @if (backupWarning is not null) { <p class="export-error backup-warning" role="alert">@backupWarning</p> }
-            <p>Export time records when a download started in this browser; it does not confirm the file was saved or includes later changes.</p>
-            <button type="button" class="keep" @onclick="ExportBackup" disabled="@(exporting || refreshing || Database is null)">@(exporting ? "Exporting backup…" : "Export backup")</button>
-            <p>Includes all saved schedules, progress and recently deleted copies. Exporting does not delete anything.</p>
-            @if (exportError is not null) { <p class="export-error" role="alert">@exportError</p> }
-            @if (exportStatus is not null) { <p class="export-status" role="status">@exportStatus</p> }
+            @if (refreshing) { <p class="backup-checking" role="status">@L["Checking backup status\u2026"]</p> }
+            <p class="last-backup">@L.Format(lastBackup, lastExportedAt ?? "")</p>
+            @if (backupWarning is not null) { <p class="export-error backup-warning" role="alert">@L[backupWarning]</p> }
+            <p>@L["Export time records when a download started in this browser; it does not confirm the file was saved or includes later changes."]</p>
+            <button type="button" class="keep" @onclick="ExportBackup" disabled="@(exporting || refreshing || Database is null)">@(exporting ? L["Exporting backup…"] : L["Export backup"])</button>
+            <p>@L["Includes all saved schedules, progress and recently deleted copies. Exporting does not delete anything."]</p>
+            @if (exportError is not null) { <p class="export-error" role="alert">@L[exportError]</p> }
+            @if (exportStatus is not null) { <p class="export-status" role="status">@L[exportStatus]</p> }
         </div>
     }
     <div class="confirmation-actions">
-        <button @ref="keepButton" type="button" class="keep" @onclick="@(() => DialogService.Close(false))">@(EmptyAll ? "Keep recovery history" : Permanent ? "Keep recovery copy" : "Keep schedule")</button>
-        <button type="button" class="delete" disabled="@DeleteBlocked" @onclick="@(() => { if (!DeleteBlocked) DialogService.Close(true); })">@(EmptyAll ? "Empty recently deleted" : Permanent ? "Permanently delete" : "Delete schedule")</button>
+        <button @ref="keepButton" type="button" class="keep" @onclick="@(() => DialogService.Close(false))">@(EmptyAll ? L["Keep recovery history"] : Permanent ? L["Keep recovery copy"] : L["Keep schedule"])</button>
+        <button type="button" class="delete" disabled="@DeleteBlocked" @onclick="@(() => { if (!DeleteBlocked) DialogService.Close(true); })">@(EmptyAll ? L["Empty recently deleted"] : Permanent ? L["Permanently delete"] : L["Delete schedule"])</button>
     </div>
 </div>
 
@@ -57,6 +58,7 @@
     private string? exportStatus;
     private string lastBackup = "Checking last backup export…";
     private string? backupWarning;
+    private string? lastExportedAt;
     private PeriodicTimer? backupTimer;
     private bool disposed;
     private bool refreshing = true;
@@ -72,9 +74,10 @@
         exportError = exportStatus = null;
         try
         {
-            var exportedAt = await Database.InvokeAsync<string>("downloadBackup");
+            var exportedAt = await Database.InvokeAsync<string>("downloadBackup", L.Locale);
             if (disposed) return;
-            lastBackup = $"Last backup exported: {exportedAt} (local time).";
+            lastExportedAt = exportedAt;
+            lastBackup = "Last backup exported: {0} (local time).";
             await RefreshBackupStatus();
             exportStatus = "Backup download started. Save the JSON file before confirming deletion.";
         }
@@ -86,6 +89,7 @@
         {
             exporting = false;
             if (refreshPending && !disposed) await RefreshOnReturn();
+            if (!disposed) await keepButton.FocusAsync();
         }
     }
 
@@ -117,9 +121,10 @@
                 refreshPending = false;
                 try
                 {
-                    var exportedAt = await Database!.InvokeAsync<string?>("lastBackupExportedAt");
+                    var exportedAt = await Database!.InvokeAsync<string?>("lastBackupExportedAt", L.Locale);
+                    lastExportedAt = exportedAt;
                     lastBackup = exportedAt is null ? "No backup export recorded in this browser."
-                        : $"Last backup exported: {exportedAt} (local time).";
+                        : "Last backup exported: {0} (local time).";
                 }
                 catch (JSException) { lastBackup = "Last backup export time is unavailable."; }
                 if (disposed) return;

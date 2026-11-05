@@ -13,6 +13,8 @@ const path=require('node:path');
   await page.evaluate(async()=>{const api=await import('/js/practice-db.js');await api.select('2026-11-01');});
   await page.goto('http://localhost:5094/');
   await page.waitForFunction(()=>!document.querySelector('#saved-schedule')?.disabled);
+  await page.locator('#ui-language').selectOption('en');
+  await page.getByRole('button',{name:'Use schedule',exact:true}).waitFor();
   await page.locator('.rz-month-view .rz-event-content').first().click();
   const practice=page.getByRole('dialog');await practice.getByRole('button',{name:'Save practice',exact:true}).waitFor();
   await practice.locator('.mantra-row .rz-label').first().click();

@@ -1,3 +1,4 @@
+@inject BlazorWasm.MantraCalendarApp.Services.UiLanguage L
 @page "/"
 @using BlazorWasm.MantraCalendarApp.Services
 @using System.Text.Json
@@ -7,20 +8,20 @@
 @inject IJSRuntime JS
 @inject DialogService DialogService
 
-<PageTitle>Mantra Practice Calendar</PageTitle>
+<PageTitle>@L["Mantra Practice Calendar"]</PageTitle>
 <header class="practice-header">
     <div class="practice-intro">
-        <p class="eyebrow">MANTRA PRACTICE CALENDAR</p>
-        <h1>Your <span class="title-glyph" aria-hidden="true"><RadzenIcon Icon="spa" /></span> daily practice.</h1>
-        <p class="intro-copy">A little space for your practice. One day at a time.</p>
-        <a class="manage-link" href="#practice-tools" @onclick="FocusTools" @onclick:preventDefault>Manage schedules <RadzenIcon Icon="arrow_forward" aria-hidden="true" /></a>
+        <p class="eyebrow">@L["MANTRA PRACTICE CALENDAR"]</p>
+        <h1>@L["Your"] <span class="title-glyph" aria-hidden="true"><RadzenIcon Icon="spa" /></span> @L["daily practice."]</h1>
+        <p class="intro-copy">@L["A little space for your practice. One day at a time."]</p>
+        <a class="manage-link" href="#practice-tools" @onclick="FocusTools" @onclick:preventDefault>@L["Manage schedules"] <RadzenIcon Icon="arrow_forward" aria-hidden="true" /></a>
     </div>
     @if (hasSchedule)
     {
-    <section class="progress-summary" aria-label="Overall practice progress">
-        <div class="summary-label">YOUR PRACTICE <span>@(100 * CompletedCount / TotalCount)% complete</span></div>
-        <p class="summary-total" role="status"><strong>@CompletedCount</strong><span> / @TotalCount<br /><small>mantras completed</small></span></p>
-        <progress value="@CompletedCount" max="@TotalCount" aria-label="Mantras completed">@CompletedCount / @TotalCount</progress>
+    <section class="progress-summary" aria-label="@L["Overall practice progress"]">
+        <div class="summary-label">@L["YOUR PRACTICE"] <span>@(100 * CompletedCount / TotalCount)% @L["complete"]</span></div>
+        <p class="summary-total" role="status"><strong>@CompletedCount</strong><span> / @TotalCount<br /><small>@L["mantras completed"]</small></span></p>
+        <progress value="@CompletedCount" max="@TotalCount" aria-label="@L["Mantras completed"]">@CompletedCount / @TotalCount</progress>
     </section>
     }
 </header>
@@ -28,49 +29,49 @@
     <div class="calendar-workspace" id="practice-calendar">
 @if (loading)
 {
-    <p role="status" class="loading-note">Working with your practice journal…</p>
+    <p role="status" class="loading-note">@L["Working with your practice journal\u2026"]</p>
 }
 @if (storageError is not null)
 {
-    <p role="alert" class="storage-error">@storageError</p>
+    <p role="alert" class="storage-error">@L[storageError]</p>
 }
 
 @if (hasSchedule)
 {
 <section class="calendar-panel" aria-labelledby="calendar-heading">
     <div class="calendar-heading">
-        <div><h2 id="calendar-heading">Your practice calendar</h2><p>Select a day to record your mantras.</p></div>
-        <span class="period-label">@appointments.First().Start.ToString("d MMM") – @appointments.Last().Start.ToString("d MMM yyyy")</span>
+        <div><h2 id="calendar-heading">@L["Your practice calendar"]</h2><p>@L["Select a day to record your mantras."]</p></div>
+        <span class="period-label">@L.Date(appointments.First().Start, "d MMM") – @L.Date(appointments.Last().Start)</span>
     </div>
 <div class="calendar-surface">
-<RadzenScheduler @key="activeStart" @ref="scheduler" TItem="Appointment" Data="@appointments" StartProperty="Start" EndProperty="End"
+<RadzenScheduler @key="activeStart" @ref="scheduler" TItem="Appointment" Data="@appointments" StartProperty="Start" EndProperty="End" Culture="@L.Culture" TodayText="@L["Today"]" NextText="@L["Next"]" PrevText="@L["Previous"]"
                  TextProperty="Text" Date="@appointments.First().Start" SlotSelect="OnSlotSelect"
                  AppointmentSelect="OnAppointmentSelect" AppointmentRender="OnAppointmentRender">
     <Template Context="day">
-        <span class="event-count">@day.Mantras.Count(m => m.IsPracticed)/@day.Mantras.Count</span><span class="event-state">@(day.Mantras.All(m => m.IsPracticed) ? "Completed" : "Pending")</span>
+        <span class="event-count">@day.Mantras.Count(m => m.IsPracticed)/@day.Mantras.Count</span><span class="event-state">@(day.Mantras.All(m => m.IsPracticed) ? L["Completed"] : L["Pending"])</span>
     </Template>
     <ChildContent>
-        <RadzenMonthView />
-        <RadzenYearPlannerView StartMonth="Month.January" />
-        <RadzenYearTimelineView StartMonth="Month.January" />
-        <RadzenYearView StartMonth="Month.January" />
+        <RadzenMonthView Text="@L["Month"]" MoreText="@L["More"]" />
+        <RadzenYearPlannerView StartMonth="Month.January" Text="@L["Planner"]" MoreText="@L["More"]" />
+        <RadzenYearTimelineView StartMonth="Month.January" Text="@L["Timeline"]" MoreText="@L["More"]" />
+        <RadzenYearView StartMonth="Month.January" Text="@L["Year"]" MoreText="@L["More"]" NoDayEventsText="@L["No events"]" />
     </ChildContent>
 </RadzenScheduler>
 </div>
-    <div class="calendar-footnote"><span><i class="legend-dot pending" aria-hidden="true"></i> Pending <i class="legend-dot complete" aria-hidden="true"></i> Completed</span><span>Save your practice after each session.</span></div>
+    <div class="calendar-footnote"><span><i class="legend-dot pending" aria-hidden="true"></i> @L["Pending"] <i class="legend-dot complete" aria-hidden="true"></i> @L["Completed"]</span><span>@L["Save your practice after each session."]</span></div>
 </section>
 }
 else if (!loading)
 {
-    <p class="empty-journal">@(deletedSchedules.Count > 0 ? "No saved schedules. Restore a schedule from Recently deleted above, or create a new one." : "No saved schedules. Choose a practice start date above to create one, or import a backup.")</p>
+    <p class="empty-journal">@(deletedSchedules.Count > 0 ? L["No saved schedules. Restore a schedule from Recently deleted above, or create a new one."] : L["No saved schedules. Choose a practice start date above to create one, or import a backup."])</p>
 }
 
     </div>
-    <aside @ref="toolsPanel" class="practice-tools" id="practice-tools" aria-label="Schedule and backup tools" tabindex="-1">
-        <div class="tools-heading"><span class="eyebrow">YOUR JOURNAL</span><h2>Make it a practice.</h2><p>Choose your rhythm. Keep your progress.</p></div>
+    <aside @ref="toolsPanel" class="practice-tools" id="practice-tools" aria-label="@L["Schedule and backup tools"]" tabindex="-1">
+        <div class="tools-heading"><span class="eyebrow">@L["YOUR JOURNAL"]</span><h2>@L["Make it a practice."]</h2><p>@L["Choose your rhythm. Keep your progress."]</p></div>
 <section class="saved-schedules" aria-labelledby="saved-schedules-label">
-    <label id="saved-schedules-label" for="saved-schedule">Saved schedules</label>
-    <p id="saved-schedule-hint">Switch periods without losing your progress.</p>
+    <label id="saved-schedules-label" for="saved-schedule">@L["Saved schedules"]</label>
+    <p id="saved-schedule-hint">@L["Switch periods without losing your progress."]</p>
     <select id="saved-schedule" @bind:get="SelectedSchedule" @bind:set="ChooseSavedSchedule"
             aria-describedby="saved-schedule-hint" disabled="@(loading || editing || database is null || storageError is not null || backupText is not null || savedSchedules.Count == 0)">
         @if (savedSchedules.Count == 0)
@@ -79,63 +80,63 @@ else if (!loading)
         }
         @foreach (var start in savedSchedules)
         {
-            <option value="@start.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)">@start.ToString("d MMM yyyy") – @start.AddDays(89).ToString("d MMM yyyy")</option>
+            <option value="@start.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)">@L.Date(start) – @L.Date(start.AddDays(89))</option>
         }
     </select>
     <button type="button" class="delete-schedule" @onclick="DeleteSelectedSchedule"
-            disabled="@(loading || editing || database is null || storageError is not null || backupText is not null || !hasSchedule)">Delete selected schedule</button>
-    @if (savedScheduleError is not null) { <p class="backup-error" role="alert">@savedScheduleError</p> }
-    @if (scheduleStatus is not null) { <p class="backup-status" role="status">@scheduleStatus</p> }
+            disabled="@(loading || editing || database is null || storageError is not null || backupText is not null || !hasSchedule)">@L["Delete selected schedule"]</button>
+    @if (savedScheduleError is not null) { <p class="backup-error" role="alert">@L[savedScheduleError]</p> }
+    @if (scheduleStatus is not null) { <p class="backup-status" role="status">@L.Format(scheduleStatus, L.Date(statusDate))</p> }
     @if (deletedSchedules.Count > 0)
     {
         <div class="deleted-schedules">
-            <h3>Recently deleted schedules (@deletedSchedules.Count)</h3>
-            <p id="deleted-hint">Newest deletions first. Choose a copy to restore its schedule and progress. Other deleted schedules will be kept.</p>
-            <label for="deleted-schedule">Deleted schedule</label>
+            <h3>@L["Recently deleted schedules"] (@deletedSchedules.Count)</h3>
+            <p id="deleted-hint">@L["Newest deletions first. Choose a copy to restore its schedule and progress. Other deleted schedules will be kept."]</p>
+            <label for="deleted-schedule">@L["Deleted schedule"]</label>
             <select id="deleted-schedule" @bind="selectedDeletedId" aria-describedby="deleted-hint"
                     disabled="@(loading || editing || database is null || storageError is not null || backupText is not null)">
                 @foreach (var deleted in deletedSchedules)
                 {
-                    <option value="@deleted.Id">@deleted.StartDate.ToString("d MMM yyyy") – @deleted.StartDate.AddDays(89).ToString("d MMM yyyy") · @deleted.CompletedCount completed</option>
+                    <option value="@deleted.Id">@L.Date(deleted.StartDate) – @L.Date(deleted.StartDate.AddDays(89)) · @deleted.CompletedCount @L["completed"]</option>
                 }
             </select>
             <button type="button" class="restore-deleted" @onclick="RestoreDeletedSchedule"
-                    disabled="@(loading || editing || database is null || storageError is not null || backupText is not null)">Restore selected schedule</button>
+                    disabled="@(loading || editing || database is null || storageError is not null || backupText is not null)">@L["Restore selected schedule"]</button>
             <button type="button" class="delete-schedule" @onclick="PermanentlyDeleteSelectedCopy"
-                    disabled="@(loading || editing || database is null || storageError is not null || backupText is not null)">Permanently delete selected copy</button>
+                    disabled="@(loading || editing || database is null || storageError is not null || backupText is not null)">@L["Permanently delete selected copy"]</button>
             <button type="button" class="delete-schedule" @onclick="EmptyRecentlyDeleted"
-                    disabled="@(loading || editing || database is null || storageError is not null || backupText is not null)">Empty recently deleted</button>
+                    disabled="@(loading || editing || database is null || storageError is not null || backupText is not null)">@L["Empty recently deleted"]</button>
         </div>
     }
 </section>
 <form class="schedule-picker" @onsubmit="ApplySchedule" @onsubmit:preventDefault>
     <div>
-        <label for="schedule-start">Practice start date</label>
+        <label for="schedule-start">@L["Practice start date"]</label>
         <input id="schedule-start" type="date" @bind="draftStart" min="0001-01-01" max="9999-10-02" required disabled="@(loading || editing || backupText is not null)" />
     </div>
-    <p>Start a new 90-day practice, or reopen a saved period.</p>
-    <button type="submit" disabled="@(loading || editing || storageError is not null || backupText is not null)">Use schedule</button>
+    <p>@L["Start a new 90-day practice, or reopen a saved period."]</p>
+    <button type="submit" disabled="@(loading || editing || storageError is not null || backupText is not null)">@L["Use schedule"]</button>
 </form>
 <section class="backup-panel" aria-labelledby="backup-heading">
     <div class="backup-heading">
-        <div><h2 id="backup-heading">Backups</h2><p>Save your schedules, progress and recovery history to a JSON file.</p></div>
-        <button type="button" class="backup-button" @onclick="ExportBackup" disabled="@(loading || editing || database is null || backupText is not null || storageError is not null || (!hasSchedule && deletedSchedules.Count == 0))">Export backup</button>
+        <div><h2 id="backup-heading">@L["Backups"]</h2><p>@L["Save your schedules, progress and recovery history to a JSON file."]</p></div>
+        <button type="button" class="backup-button" @onclick="ExportBackup" disabled="@(loading || editing || database is null || backupText is not null || storageError is not null || (!hasSchedule && deletedSchedules.Count == 0))">@L["Export backup"]</button>
     </div>
-    <label class="backup-file-label" for="backup-file">Import a backup <span>JSON · up to 5 MiB</span></label>
+    <label class="backup-file-label" for="backup-file">@L["Import a backup"] <span>@L["JSON \u00b7 up to 5 MiB"]</span></label>
     <InputFile @key="backupInputVersion" id="backup-file" OnChange="ReadBackup" accept=".json,application/json" disabled="@(loading || editing || database is null || backupText is not null)" />
     @if (backupPreview is not null)
     {
-        <div class="backup-preview" role="region" aria-label="Review backup restore">
-            <p><strong>@backupPreview.ScheduleCount schedule(s) ready to restore.</strong> Progress for @backupPreview.ReplaceCount matching schedule(s) will be replaced. Other schedules will be kept.</p>
-            <p>@backupPreview.DeletedCount recently deleted recovery copy/copies included. @backupPreview.ExistingDeletedCount already present will be kept unchanged. Other recovery history will also be kept.</p>
+        <div class="backup-preview" role="region" aria-label="@L["Review backup restore"]">
+            <p><strong>@L.Format("{0} schedule(s) ready to restore.", backupPreview.ScheduleCount)</strong> @L.Format("Progress for {0} matching schedule(s) will be replaced. Other schedules will be kept.", backupPreview.ReplaceCount)</p>
+            <p>@L.Format("{0} recently deleted recovery copy/copies included. {1} already present will be kept unchanged. Other recovery history will also be kept.", backupPreview.DeletedCount, backupPreview.ExistingDeletedCount)</p>
             <div class="backup-actions">
-                <button type="button" class="backup-button secondary" @onclick="CancelBackup" disabled="@loading">Cancel</button>
-                <button type="button" class="backup-button" @onclick="RestoreBackup" disabled="@loading">Restore backup</button>
+                <button type="button" class="backup-button secondary" @onclick="CancelBackup" disabled="@loading">@L["Cancel"]</button>
+                <button type="button" class="backup-button" @onclick="RestoreBackup" disabled="@loading">@L["Restore backup"]</button>
             </div>
         </div>
     }
-    @if (backupError is not null) { <p class="backup-error" role="alert">@backupError</p> }
-    @if (backupStatus is not null) { <p class="backup-status" role="status">@backupStatus</p> }
+    @if (backupError is not null) { <p class="backup-error" role="alert">@L[backupError]</p> }
+    @if (backupStatus is not null) { <p class="backup-status" role="status">@L[backupStatus]</p> }
 </section>
     </aside>
 </div>
@@ -159,6 +160,7 @@ else if (!loading)
     private List<DateTime> savedSchedules = new();
     private string? savedScheduleError;
     private string? scheduleStatus;
+    private DateTime statusDate;
     private bool hasSchedule;
     private List<DeletedScheduleInfo> deletedSchedules = new();
     private string selectedDeletedId = "";
@@ -168,6 +170,7 @@ else if (!loading)
 
     protected override async Task OnInitializedAsync()
     {
+        L.Changed += LanguageChanged;
         appointments = MantraScheduleService.GetAppointments(activeStart);
         try
         {
@@ -263,7 +266,7 @@ else if (!loading)
         try
         {
             var confirmed = await DialogService.OpenAsync<DeleteSchedulePopup>(
-                "Delete saved schedule?", new Dictionary<string, object> { { "StartDate", deleting } }, new DialogOptions
+                L["Delete saved schedule?"], new Dictionary<string, object> { { "StartDate", deleting } }, new DialogOptions
                 {
                     Width = "min(520px, calc(100vw - 24px))", CssClass = "practice-dialog delete-confirmation",
                     ShowClose = true, CloseDialogOnEsc = true, AutoFocusFirstElement = false
@@ -273,7 +276,8 @@ else if (!loading)
             var next = await database.InvokeAsync<PracticeJournal?>("deleteSchedule", deleting.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
             RestoreSchedule(next);
             await RefreshSavedSchedules();
-            scheduleStatus = $"Schedule starting {deleting:d MMM yyyy} deleted.";
+            statusDate = deleting;
+            scheduleStatus = "Schedule starting {0} deleted.";
             backupStatus = null;
         }
         catch (Exception ex) when (ex is JSException or JsonException)
@@ -293,7 +297,7 @@ else if (!loading)
         try
         {
             var confirmed = await DialogService.OpenAsync<DeleteSchedulePopup>(
-                "Permanently delete recovery copy?", new Dictionary<string, object>
+                L["Permanently delete recovery copy?"], new Dictionary<string, object>
                 {
                     { "StartDate", copy.StartDate }, { "CompletedCount", copy.CompletedCount }, { "Permanent", true }, { "Database", database }
                 }, new DialogOptions
@@ -305,7 +309,8 @@ else if (!loading)
             loading = true;
             await database.InvokeVoidAsync("permanentlyDeleteSchedule", copy.Id);
             await RefreshSavedSchedules();
-            scheduleStatus = $"Recovery copy for the schedule starting {copy.StartDate:d MMM yyyy} permanently deleted.";
+            statusDate = copy.StartDate;
+            scheduleStatus = "Recovery copy for the schedule starting {0} permanently deleted.";
             backupStatus = null;
         }
         catch (Exception ex) when (ex is JSException or JsonException)
@@ -324,7 +329,7 @@ else if (!loading)
         try
         {
             var confirmed = await DialogService.OpenAsync<DeleteSchedulePopup>(
-                "Empty recently deleted?", new Dictionary<string, object>
+                L["Empty recently deleted?"], new Dictionary<string, object>
                 {
                     { "EmptyAll", true }, { "RecoveryCount", ids.Count }, { "Database", database }
                 }, new DialogOptions
@@ -348,8 +353,11 @@ else if (!loading)
 
     public async ValueTask DisposeAsync()
     {
+        L.Changed -= LanguageChanged;
         if (database is not null) await database.DisposeAsync();
     }
+
+    private void LanguageChanged() => _ = InvokeAsync(StateHasChanged);
 
     private async Task RestoreDeletedSchedule()
     {
@@ -450,7 +458,7 @@ else if (!loading)
     {
         args.Attributes["role"] = "button";
         args.Attributes["tabindex"] = "0";
-        args.Attributes["aria-label"] = $"{args.Data.Start:dddd, d MMMM yyyy}: {args.Data.Mantras.Count(m => m.IsPracticed)} of {args.Data.Mantras.Count} completed";
+        args.Attributes["aria-label"] = L.Format("{0}: {1} of {2} completed", L.Date(args.Data.Start, "dddd, d MMMM yyyy"), args.Data.Mantras.Count(m => m.IsPracticed), args.Data.Mantras.Count);
         args.Attributes["onkeydown"] = EventCallback.Factory.Create<KeyboardEventArgs>(this, e =>
             e.Key is "Enter" or " " ? EditDay(args.Data) : Task.CompletedTask);
         if (args.Data.Mantras.All(m => m.IsPracticed))
@@ -463,7 +471,7 @@ else if (!loading)
         editing = true;
         try
         {
-            var result = await DialogService.OpenAsync<EditMantraPopup>(day.Start.ToString("dddd, d MMMM yyyy"),
+            var result = await DialogService.OpenAsync<EditMantraPopup>(L.Date(day.Start, "dddd, d MMMM yyyy"),
                 new Dictionary<string, object> { { "Appointment", day } },
                 new DialogOptions { Width = "min(520px, calc(100vw - 24px))", CssClass = "practice-dialog", CloseDialogOnEsc = true });
             if (result is not Appointment updated) return;
