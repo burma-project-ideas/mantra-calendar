@@ -14,6 +14,12 @@ C# နဲ့ Blazor WebAssembly ကို လေ့လာသူတွေအတ�
 4. **Saved schedules** ကနေ အရင်သိမ်းထားတဲ့ အစီအစဉ်တွေကို ပြန်ဖွင့်နိုင်ပါတယ်။
 5. **Export backup** နဲ့ JSON ဖိုင်ထုတ်သိမ်းထားပြီး နောက်မှ **Import a backup** နဲ့ ပြန်ယူနိုင်ပါတယ်။
 
+## ဘာသာစကား ရွေးချယ်မှု
+
+ပုံမှန်အားဖြင့် **မြန်မာ (MM)** ဘာသာဖြင့် ဖွင့်ပေးပါသည်။ စာမျက်နှာအပေါ်ရှိ ဘာသာစကားရွေးချယ်မှုမှ **English (EN)** သို့ ပြောင်းနိုင်ပြီး ရွေးချယ်မှုကို IndexedDB တွင် သိမ်းထားသောကြောင့် နောက်တစ်ကြိမ် ပြန်ဖွင့်လည်း ဆက်အသုံးပြုနိုင်ပါသည်။ ဘာသာစကားပြောင်းခြင်းက အစီအစဉ်နှင့် ရွတ်ဖတ်မှုမှတ်တမ်းများကို မပြောင်းလဲပါ။
+
+Calendar controls, month/day names, the practice editor, backup messages and deletion confirmations support both languages. The English control names used below are available by selecting **English** in the header. Browser-native date/file picker text follows your browser or operating system language.
+
 ## Preview
 
 ![Desktop calendar with daily progress and schedule tools](docs/images/calendar-desktop.png)
@@ -156,6 +162,7 @@ For browser checks, install Node.js and Microsoft Edge, keep the app running at 
 ```sh
 npm install --no-save --package-lock=false playwright-core
 node tests/ResponsiveUi.checks.cjs
+node tests/Language.checks.cjs
 node tests/DialogBackup.checks.cjs
 node tests/CompleteDeleteFlow.checks.cjs
 ```
