@@ -1,9 +1,34 @@
 ﻿using System.ComponentModel;
 
+using System.Text.Json.Serialization;
+
 namespace BlazorWasm.MantraCalendarApp.Services;
 
 public class MantraScheduleService
 {
+    public List<Appointment> GetAppointments(DateTime startDate)
+    {
+        if (startDate.Date > DateTime.MaxValue.Date.AddDays(-90))
+            throw new ArgumentOutOfRangeException(nameof(startDate), "The full 90-day schedule must fit within the supported dates.");
+        var templates = GetMantraTypes();
+        var offset = startDate.Date - templates[0].StartDate;
+        var appointments = new List<Appointment>();
+        foreach (var schedule in templates)
+        {
+            for (var date = schedule.StartDate + offset; date <= schedule.EndDate + offset; date = date.AddDays(1))
+            {
+                appointments.Add(new Appointment
+                {
+                    Start = date,
+                    End = date.AddDays(1),
+                    Text = $"Practice on {date:dd.MM.yyyy}",
+                    Mantras = schedule.MantraTypes.Select(mantra => mantra.Copy()).ToList()
+                });
+            }
+        }
+        return appointments;
+    }
+
     public List<MantraScheduleModel> GetMantras()
     {
         return new List<MantraScheduleModel>
@@ -167,16 +192,18 @@ public class MantraModel
 {
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }
-    public List<MantraTypeModel> MantraTypes { get; set; }
+    public List<MantraTypeModel> MantraTypes { get; set; } = new();
 }
 
 public class MantraTypeModel
 {
     public MantraType Type { get; set; }
-    public string Name { get; set; }
-    public string Description { get; set; }
+    public string Name { get; set; } = "";
+    public string Description { get; set; } = "";
     public int Count { get; set; }
     public bool IsPracticed { get; set; }
+
+    public MantraTypeModel Copy() => (MantraTypeModel)MemberwiseClone();
 }
 
 public enum MantraType
@@ -198,8 +225,51 @@ public class Appointment
     public DateTime Start { get; set; }
     public DateTime End { get; set; }
 
-    public string Text { get; set; }
-    public string Description { get; set; }
+    public string Text { get; set; } = "";
+    public string Description { get; set; } = "";
     public bool IsPracticed { get; set; }
-    public List<MantraTypeModel> Mantras { get; set; }
+    public List<MantraTypeModel> Mantras { get; set; } = new();
+
+    public Appointment Copy() => new()
+    {
+        Start = Start,
+        End = End,
+        Text = Text,
+        Description = Description,
+        IsPracticed = IsPracticed,
+        Mantras = Mantras.Select(mantra => mantra.Copy()).ToList()
+    };
+}
+
+public class MantraProgress
+{
+    [JsonRequired]
+    public DateTime Date { get; set; }
+    [JsonRequired]
+    public string MantraName { get; set; } = "";
+    [JsonRequired]
+    public bool IsPracticed { get; set; }
+}
+
+public class PracticeJournal
+{
+    [JsonRequired]
+    public string StartDate { get; set; } = "";
+    [JsonRequired]
+    public List<MantraProgress?> Progress { get; set; } = new();
+}
+
+public class BackupPreview
+{
+    public int ScheduleCount { get; set; }
+    public int ReplaceCount { get; set; }
+    public int DeletedCount { get; set; }
+    public int ExistingDeletedCount { get; set; }
+}
+
+public class DeletedScheduleInfo
+{
+    public string Id { get; set; } = "";
+    public DateTime StartDate { get; set; }
+    public int CompletedCount { get; set; }
 }
