@@ -1,166 +1,485 @@
-﻿@page "/"
+@page "/"
 @using BlazorWasm.MantraCalendarApp.Services
-@using Blazored.LocalStorage
-@inject MantraScheduleService mantraScheduleService
-@inject ILocalStorageService LocalStorage
+@using System.Text.Json
+@using System.Globalization
+@implements IAsyncDisposable
+@inject MantraScheduleService MantraScheduleService
+@inject IJSRuntime JS
 @inject DialogService DialogService
 
-<h3>Mantra Practice Calendar</h3>
+<PageTitle>Mantra Practice Calendar</PageTitle>
+<header class="practice-header">
+    <div class="practice-intro">
+        <p class="eyebrow">A MOMENT FOR YOURSELF</p>
+        <h1>Mantra Practice Calendar</h1>
+        <p class="intro-copy">Make space for your daily practice.<br />Small moments of intention, one day at a time.</p>
+    </div>
+    @if (hasSchedule)
+    {
+    <section class="progress-summary" aria-label="Overall practice progress">
+        <div class="summary-label">YOUR PRACTICE <span>@(100 * CompletedCount / TotalCount)% complete</span></div>
+        <p class="summary-total" role="status"><strong>@CompletedCount</strong><span> / @TotalCount<br /><small>mantras completed</small></span></p>
+        <progress value="@CompletedCount" max="@TotalCount" aria-label="Mantras completed">@CompletedCount / @TotalCount</progress>
+    </section>
+    }
+</header>
+<section class="saved-schedules" aria-labelledby="saved-schedules-label">
+    <label id="saved-schedules-label" for="saved-schedule">Saved schedules</label>
+    <p id="saved-schedule-hint">Choose a saved period to open it and continue your practice.</p>
+    <select id="saved-schedule" @bind:get="SelectedSchedule" @bind:set="ChooseSavedSchedule"
+            aria-describedby="saved-schedule-hint" disabled="@(loading || editing || database is null || storageError is not null || backupText is not null || savedSchedules.Count == 0)">
+        @if (savedSchedules.Count == 0)
+        {
+            <option value="">@(loading ? "Loading saved schedules…" : "No saved schedules available")</option>
+        }
+        @foreach (var start in savedSchedules)
+        {
+            <option value="@start.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)">@start.ToString("d MMM yyyy") – @start.AddDays(89).ToString("d MMM yyyy")</option>
+        }
+    </select>
+    <button type="button" class="delete-schedule" @onclick="DeleteSelectedSchedule"
+            disabled="@(loading || editing || database is null || storageError is not null || backupText is not null || !hasSchedule)">Delete selected schedule</button>
+    @if (savedScheduleError is not null) { <p class="backup-error" role="alert">@savedScheduleError</p> }
+    @if (scheduleStatus is not null) { <p class="backup-status" role="status">@scheduleStatus</p> }
+    @if (deletedSchedules.Count > 0)
+    {
+        <div class="deleted-schedules">
+            <h3>Recently deleted schedules (@deletedSchedules.Count)</h3>
+            <p id="deleted-hint">Newest deletions first. Choose a copy to restore its schedule and progress. Other deleted schedules will be kept.</p>
+            <label for="deleted-schedule">Deleted schedule</label>
+            <select id="deleted-schedule" @bind="selectedDeletedId" aria-describedby="deleted-hint"
+                    disabled="@(loading || editing || database is null || storageError is not null || backupText is not null)">
+                @foreach (var deleted in deletedSchedules)
+                {
+                    <option value="@deleted.Id">@deleted.StartDate.ToString("d MMM yyyy") – @deleted.StartDate.AddDays(89).ToString("d MMM yyyy") · @deleted.CompletedCount completed</option>
+                }
+            </select>
+            <button type="button" class="restore-deleted" @onclick="RestoreDeletedSchedule"
+                    disabled="@(loading || editing || database is null || storageError is not null || backupText is not null)">Restore selected schedule</button>
+            <button type="button" class="delete-schedule" @onclick="PermanentlyDeleteSelectedCopy"
+                    disabled="@(loading || editing || database is null || storageError is not null || backupText is not null)">Permanently delete selected copy</button>
+            <button type="button" class="delete-schedule" @onclick="EmptyRecentlyDeleted"
+                    disabled="@(loading || editing || database is null || storageError is not null || backupText is not null)">Empty recently deleted</button>
+        </div>
+    }
+</section>
+<form class="schedule-picker" @onsubmit="ApplySchedule" @onsubmit:preventDefault>
+    <div>
+        <label for="schedule-start">Practice start date</label>
+        <input id="schedule-start" type="date" @bind="draftStart" min="0001-01-01" max="9999-10-02" required disabled="@(loading || editing || backupText is not null)" />
+    </div>
+    <p>90 days of practice · Your progress is kept for each start date.</p>
+    <button type="submit" disabled="@(loading || editing || storageError is not null || backupText is not null)">Use schedule</button>
+</form>
+<section class="backup-panel" aria-labelledby="backup-heading">
+    <div class="backup-heading">
+        <div><h2 id="backup-heading">Keep a backup</h2><p>Save your schedules, progress and recovery history to a JSON file.</p></div>
+        <button type="button" class="backup-button" @onclick="ExportBackup" disabled="@(loading || editing || database is null || backupText is not null || storageError is not null || (!hasSchedule && deletedSchedules.Count == 0))">Export backup</button>
+    </div>
+    <label class="backup-file-label" for="backup-file">Import a backup <span>JSON · up to 5 MiB</span></label>
+    <InputFile @key="backupInputVersion" id="backup-file" OnChange="ReadBackup" accept=".json,application/json" disabled="@(loading || editing || database is null || backupText is not null)" />
+    @if (backupPreview is not null)
+    {
+        <div class="backup-preview" role="region" aria-label="Review backup restore">
+            <p><strong>@backupPreview.ScheduleCount schedule(s) ready to restore.</strong> Progress for @backupPreview.ReplaceCount matching schedule(s) will be replaced. Other schedules will be kept.</p>
+            <p>@backupPreview.DeletedCount recently deleted recovery copy/copies included. @backupPreview.ExistingDeletedCount already present will be kept unchanged. Other recovery history will also be kept.</p>
+            <div class="backup-actions">
+                <button type="button" class="backup-button secondary" @onclick="CancelBackup" disabled="@loading">Cancel</button>
+                <button type="button" class="backup-button" @onclick="RestoreBackup" disabled="@loading">Restore backup</button>
+            </div>
+        </div>
+    }
+    @if (backupError is not null) { <p class="backup-error" role="alert">@backupError</p> }
+    @if (backupStatus is not null) { <p class="backup-status" role="status">@backupStatus</p> }
+</section>
+@if (loading)
+{
+    <p role="status" class="loading-note">Working with your practice journal…</p>
+}
+@if (storageError is not null)
+{
+    <p role="alert" class="storage-error">@storageError</p>
+}
 
-<RadzenScheduler @ref="scheduler" TItem="Appointment" Data="@appointments" StartProperty="Start" EndProperty="End"
-                 TextProperty="Text" SlotSelect="OnSlotSelect" AppointmentSelect="OnAppointmentSelect">
-    <RadzenMonthView />
-    <RadzenYearPlannerView StartMonth="@startMonth" />
-    <RadzenYearTimelineView StartMonth="@startMonth" />
-    <RadzenYearView StartMonth="@startMonth" />
+@if (hasSchedule)
+{
+<section class="calendar-panel" aria-labelledby="calendar-heading">
+    <div class="calendar-heading">
+        <div><h2 id="calendar-heading">Your practice calendar</h2><p>Select a day to record your mantras.</p></div>
+        <span class="period-label">@appointments.First().Start.ToString("d MMM") – @appointments.Last().Start.ToString("d MMM yyyy")</span>
+    </div>
+<div class="calendar-surface">
+<RadzenScheduler @key="activeStart" @ref="scheduler" TItem="Appointment" Data="@appointments" StartProperty="Start" EndProperty="End"
+                 TextProperty="Text" Date="@appointments.First().Start" SlotSelect="OnSlotSelect"
+                 AppointmentSelect="OnAppointmentSelect" AppointmentRender="OnAppointmentRender">
+    <Template Context="day">
+        <span class="event-count">@day.Mantras.Count(m => m.IsPracticed)/@day.Mantras.Count</span><span class="event-state">@(day.Mantras.All(m => m.IsPracticed) ? "Completed" : "Pending")</span>
+    </Template>
+    <ChildContent>
+        <RadzenMonthView />
+        <RadzenYearPlannerView StartMonth="Month.January" />
+        <RadzenYearTimelineView StartMonth="Month.January" />
+        <RadzenYearView StartMonth="Month.January" />
+    </ChildContent>
 </RadzenScheduler>
+</div>
+    <div class="calendar-footnote"><span><i class="legend-dot pending" aria-hidden="true"></i> Pending <i class="legend-dot complete" aria-hidden="true"></i> Completed</span><span>Save your practice after each session.</span></div>
+</section>
+}
+else if (!loading)
+{
+    <p class="empty-journal">@(deletedSchedules.Count > 0 ? "No saved schedules. Restore a schedule from Recently deleted above, or create a new one." : "No saved schedules. Choose a practice start date above to create one, or import a backup.")</p>
+}
 
 @code {
-    private RadzenScheduler<Appointment> scheduler;
-    private Month startMonth = Month.January;
-
-    // Initialize appointments list
-    IList<Appointment> appointments = new List<Appointment>();
+    private RadzenScheduler<Appointment> scheduler = default!;
+    private List<Appointment> appointments = new();
+    private string? storageError;
+    private bool editing;
+    private bool loading = true;
+    private DateTime activeStart = DateTime.Today;
+    private DateTime draftStart = DateTime.Today;
+    private IJSObjectReference? database;
+    private string? backupText;
+    private BackupPreview? backupPreview;
+    private string? backupError;
+    private string? backupStatus;
+    private int backupInputVersion;
+    private List<DateTime> savedSchedules = new();
+    private string? savedScheduleError;
+    private string? scheduleStatus;
+    private bool hasSchedule;
+    private List<DeletedScheduleInfo> deletedSchedules = new();
+    private string selectedDeletedId = "";
+    private string SelectedSchedule => savedSchedules.Count == 0 ? "" : activeStart.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+    private int CompletedCount => appointments.Sum(a => a.Mantras.Count(m => m.IsPracticed));
+    private int TotalCount => appointments.Sum(a => a.Mantras.Count);
 
     protected override async Task OnInitializedAsync()
     {
-        var mantraSchedules = mantraScheduleService.GetMantraTypes();
-
-        // Generate appointments, grouping by dates
-        appointments = mantraSchedules.SelectMany(mantra =>
+        appointments = MantraScheduleService.GetAppointments(activeStart);
+        try
         {
-            var dailyAppointments = new List<Appointment>();
-            var groupedDates = mantra.MantraTypes
-                .SelectMany(m => GenerateDatesForMantra(mantra.StartDate, mantra.EndDate)
-                .Select(date => new { Date = date, Mantra = m }))
-                .GroupBy(d => d.Date)
-                .ToList();
+            database = await JS.InvokeAsync<IJSObjectReference>("import", "./js/practice-db.js");
+            var saved = await database.InvokeAsync<PracticeJournal?>("load");
+            RestoreSchedule(saved);
+            await RefreshSavedSchedules();
+        }
+        catch (Exception ex) when (ex is JSException or JsonException)
+        {
+            storageError = "Your IndexedDB journal could not be opened. Existing data was left untouched. Check browser storage access, close other calendar tabs and reload before editing.";
+        }
+        finally { loading = false; }
+    }
 
-            foreach (var group in groupedDates)
-            {
-                dailyAppointments.Add(new Appointment
+    private void RestoreSchedule(PracticeJournal? saved)
+    {
+        if (saved is null)
+        {
+            hasSchedule = false;
+            appointments = new();
+            activeStart = draftStart = DateTime.Today;
+            return;
+        }
+        if (!DateTime.TryParseExact(saved.StartDate, "yyyy-MM-dd", CultureInfo.InvariantCulture,
+                DateTimeStyles.None, out var start) || start > DateTime.MaxValue.Date.AddDays(-90)
+            || saved.Progress is null || saved.Progress.Any(p => p is null || p.Date == default || string.IsNullOrWhiteSpace(p.MantraName)))
+            throw new JsonException("Invalid saved schedule.");
+        var restored = MantraScheduleService.GetAppointments(start);
+        foreach (var progress in saved.Progress)
+        {
+            var day = restored.FirstOrDefault(a => a.Start.Date == progress!.Date.Date);
+            var mantra = day?.Mantras.FirstOrDefault(m => m.Name == progress!.MantraName);
+            if (mantra is not null) mantra.IsPracticed = progress!.IsPracticed;
+        }
+        appointments = restored;
+        activeStart = draftStart = start;
+        hasSchedule = true;
+    }
+
+    private async Task ApplySchedule()
+    {
+        if (loading || editing || storageError is not null || database is null || backupText is not null) return;
+        if (draftStart > DateTime.MaxValue.Date.AddDays(-90)) return;
+        loading = true;
+        try
+        {
+            var saved = await database.InvokeAsync<PracticeJournal>("select", draftStart.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
+            RestoreSchedule(saved);
+            scheduleStatus = null;
+            await RefreshSavedSchedules();
+        }
+        catch (Exception ex) when (ex is JSException or JsonException)
+        {
+            draftStart = activeStart;
+            storageError = "The schedule could not be opened in IndexedDB. Your current progress is unchanged. Check browser storage access and reload.";
+        }
+        finally { loading = false; }
+    }
+
+    private async Task ChooseSavedSchedule(string value)
+    {
+        if (loading || editing || storageError is not null || backupText is not null) return;
+        if (!DateTime.TryParseExact(value, "yyyy-MM-dd", CultureInfo.InvariantCulture,
+                DateTimeStyles.None, out var start) || !savedSchedules.Contains(start)) return;
+        draftStart = start;
+        await ApplySchedule();
+    }
+
+    private async Task RefreshSavedSchedules()
+    {
+        if (database is null) return;
+        try
+        {
+            savedSchedules = await database.InvokeAsync<List<DateTime>>("listSchedules");
+            deletedSchedules = await database.InvokeAsync<List<DeletedScheduleInfo>>("listDeletedSchedules");
+            if (!deletedSchedules.Any(deleted => deleted.Id == selectedDeletedId))
+                selectedDeletedId = deletedSchedules.FirstOrDefault()?.Id ?? "";
+            savedScheduleError = null;
+        }
+        catch (Exception ex) when (ex is JSException or JsonException)
+        {
+            savedScheduleError = "Saved schedules could not be listed. Your progress is unchanged. Reload to try again.";
+        }
+    }
+
+    private async Task DeleteSelectedSchedule()
+    {
+        if (loading || editing || database is null || storageError is not null || backupText is not null || !hasSchedule) return;
+        editing = true;
+        savedScheduleError = scheduleStatus = null;
+        var deleting = activeStart;
+        try
+        {
+            var confirmed = await DialogService.OpenAsync<DeleteSchedulePopup>(
+                "Delete saved schedule?", new Dictionary<string, object> { { "StartDate", deleting } }, new DialogOptions
                 {
-                    Start = group.Key,
-                    End = group.Key,
-                    Text = $"Mantras on {group.Key.ToString("dd.MM.yyyy")}",
-                    Description = "Multiple mantras on this day.",
-                    Mantras = group.Select(g => g.Mantra).ToList(),
-                    IsPracticed = false // Initially set to pending
+                    Width = "min(520px, calc(100vw - 24px))", CssClass = "practice-dialog delete-confirmation",
+                    ShowClose = true, CloseDialogOnEsc = true, AutoFocusFirstElement = false
                 });
+            if (confirmed is not true) return;
+            loading = true;
+            var next = await database.InvokeAsync<PracticeJournal?>("deleteSchedule", deleting.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
+            RestoreSchedule(next);
+            await RefreshSavedSchedules();
+            scheduleStatus = $"Schedule starting {deleting:d MMM yyyy} deleted.";
+            backupStatus = null;
+        }
+        catch (Exception ex) when (ex is JSException or JsonException)
+        {
+            savedScheduleError = "The schedule could not be deleted. Your saved progress was left unchanged. Check browser storage access and try again.";
+        }
+        finally { loading = false; editing = false; }
+    }
+
+    private async Task PermanentlyDeleteSelectedCopy()
+    {
+        if (loading || editing || database is null || storageError is not null || backupText is not null) return;
+        var copy = deletedSchedules.FirstOrDefault(deleted => deleted.Id == selectedDeletedId);
+        if (copy is null) return;
+        editing = true;
+        savedScheduleError = scheduleStatus = null;
+        try
+        {
+            var confirmed = await DialogService.OpenAsync<DeleteSchedulePopup>(
+                "Permanently delete recovery copy?", new Dictionary<string, object>
+                {
+                    { "StartDate", copy.StartDate }, { "CompletedCount", copy.CompletedCount }, { "Permanent", true }, { "Database", database }
+                }, new DialogOptions
+                {
+                    Width = "min(520px, calc(100vw - 24px))", CssClass = "practice-dialog delete-confirmation",
+                    ShowClose = true, CloseDialogOnEsc = true, AutoFocusFirstElement = false
+                });
+            if (confirmed is not true) return;
+            loading = true;
+            await database.InvokeVoidAsync("permanentlyDeleteSchedule", copy.Id);
+            await RefreshSavedSchedules();
+            scheduleStatus = $"Recovery copy for the schedule starting {copy.StartDate:d MMM yyyy} permanently deleted.";
+            backupStatus = null;
+        }
+        catch (Exception ex) when (ex is JSException or JsonException)
+        {
+            savedScheduleError = "The recovery copy could not be permanently deleted. Your saved schedules and recovery history are unchanged. Check browser storage access and try again.";
+        }
+        finally { loading = false; editing = false; }
+    }
+
+    private async Task EmptyRecentlyDeleted()
+    {
+        if (loading || editing || database is null || storageError is not null || backupText is not null || deletedSchedules.Count == 0) return;
+        var ids = deletedSchedules.Select(copy => copy.Id).ToList();
+        editing = true;
+        savedScheduleError = scheduleStatus = null;
+        try
+        {
+            var confirmed = await DialogService.OpenAsync<DeleteSchedulePopup>(
+                "Empty recently deleted?", new Dictionary<string, object>
+                {
+                    { "EmptyAll", true }, { "RecoveryCount", ids.Count }, { "Database", database }
+                }, new DialogOptions
+                {
+                    Width = "min(520px, calc(100vw - 24px))", CssClass = "practice-dialog delete-confirmation",
+                    ShowClose = true, CloseDialogOnEsc = true, AutoFocusFirstElement = false
+                });
+            if (confirmed is not true) return;
+            loading = true;
+            await database.InvokeVoidAsync("emptyDeletedSchedules", ids);
+            await RefreshSavedSchedules();
+            scheduleStatus = "Confirmed recovery copies permanently deleted. Saved schedules were kept.";
+            backupStatus = null;
+        }
+        catch (Exception ex) when (ex is JSException or JsonException)
+        {
+            savedScheduleError = "Recovery history could not be emptied. Your saved schedules and recovery copies are unchanged. Check browser storage access and try again.";
+        }
+        finally { loading = false; editing = false; }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (database is not null) await database.DisposeAsync();
+    }
+
+    private async Task RestoreDeletedSchedule()
+    {
+        if (loading || editing || database is null || storageError is not null || backupText is not null || selectedDeletedId.Length == 0) return;
+        loading = true;
+        savedScheduleError = scheduleStatus = null;
+        try
+        {
+            var restored = await database.InvokeAsync<PracticeJournal>("restoreDeletedSchedule", selectedDeletedId);
+            RestoreSchedule(restored);
+            await RefreshSavedSchedules();
+            scheduleStatus = "The selected schedule and its progress have been restored. Other deleted schedules were kept.";
+        }
+        catch (Exception ex) when (ex is JSException or JsonException)
+        {
+            savedScheduleError = "The deleted schedule could not be restored. If a saved schedule with this start date already exists, it will not be overwritten. Your journal and recovery data are unchanged.";
+        }
+        finally { loading = false; }
+    }
+
+    private async Task ExportBackup()
+    {
+        if (loading || editing || database is null || backupText is not null || storageError is not null || (!hasSchedule && deletedSchedules.Count == 0)) return;
+        loading = true;
+        backupError = backupStatus = null;
+        try
+        {
+            await database.InvokeVoidAsync("downloadBackup");
+            backupStatus = "Backup download started. Keep the JSON file somewhere you can find it later.";
+        }
+        catch (JSException)
+        {
+            backupError = "The backup could not be exported. Check browser storage and download access, then try again.";
+        }
+        finally { loading = false; }
+    }
+
+    private async Task ReadBackup(InputFileChangeEventArgs args)
+    {
+        if (loading || editing || database is null || backupText is not null) return;
+        loading = true;
+        backupError = backupStatus = null;
+        try
+        {
+            using var stream = args.File.OpenReadStream(5 * 1024 * 1024);
+            using var reader = new StreamReader(stream);
+            var text = await reader.ReadToEndAsync();
+            backupPreview = await database.InvokeAsync<BackupPreview>("previewBackup", text);
+            backupText = text;
+            backupStatus = "Backup checked. Review the restore details below before continuing.";
+        }
+        catch (Exception ex) when (ex is JSException or IOException or JsonException)
+        {
+            backupError = "This file could not be read as a valid Mantra Practice Calendar backup. Choose an exported version 1 or 2 JSON file no larger than 5 MiB. Your journal is unchanged.";
+        }
+        finally { loading = false; backupInputVersion++; }
+    }
+
+    private void CancelBackup()
+    {
+        backupText = null;
+        backupPreview = null;
+        backupError = null;
+        backupStatus = "Restore cancelled. Your journal is unchanged.";
+    }
+
+    private async Task RestoreBackup()
+    {
+        if (loading || editing || database is null || backupText is null) return;
+        loading = true;
+        backupError = backupStatus = null;
+        try
+        {
+            var saved = await database.InvokeAsync<PracticeJournal?>("restoreBackup", backupText);
+            RestoreSchedule(saved);
+            backupText = null;
+            backupPreview = null;
+            storageError = null;
+            await RefreshSavedSchedules();
+            backupStatus = "Backup restored. Your schedules, progress and recovery history are saved in this browser.";
+        }
+        catch (Exception ex) when (ex is JSException or JsonException)
+        {
+            backupError = "The backup could not be restored. Your journal was left unchanged. Check browser storage access and try again.";
+        }
+        finally { loading = false; }
+    }
+
+    private Task OnSlotSelect(SchedulerSlotSelectEventArgs args)
+    {
+        var day = appointments.FirstOrDefault(a => a.Start.Date == args.Start.Date);
+        return day is null ? Task.CompletedTask : EditDay(day);
+    }
+
+    private Task OnAppointmentSelect(SchedulerAppointmentSelectEventArgs<Appointment> args) => EditDay(args.Data);
+
+    private void OnAppointmentRender(SchedulerAppointmentRenderEventArgs<Appointment> args)
+    {
+        args.Attributes["role"] = "button";
+        args.Attributes["tabindex"] = "0";
+        args.Attributes["aria-label"] = $"{args.Data.Start:dddd, d MMMM yyyy}: {args.Data.Mantras.Count(m => m.IsPracticed)} of {args.Data.Mantras.Count} completed";
+        args.Attributes["onkeydown"] = EventCallback.Factory.Create<KeyboardEventArgs>(this, e =>
+            e.Key is "Enter" or " " ? EditDay(args.Data) : Task.CompletedTask);
+        if (args.Data.Mantras.All(m => m.IsPracticed))
+            args.Attributes["style"] = "background-color: #28543c; color: white; border-color: #28543c;";
+    }
+
+    private async Task EditDay(Appointment day)
+    {
+        if (storageError is not null || editing || loading || database is null || backupText is not null || !hasSchedule) return;
+        editing = true;
+        try
+        {
+            var result = await DialogService.OpenAsync<EditMantraPopup>(day.Start.ToString("dddd, d MMMM yyyy"),
+                new Dictionary<string, object> { { "Appointment", day } },
+                new DialogOptions { Width = "min(520px, calc(100vw - 24px))", CssClass = "practice-dialog", CloseDialogOnEsc = true });
+            if (result is not Appointment updated) return;
+
+            var prospective = appointments.Select(a => a == day ? updated : a).ToList();
+            var progress = prospective.SelectMany(a => a.Mantras.Select(m => new MantraProgress
+            {
+                Date = a.Start.Date,
+                MantraName = m.Name,
+                IsPracticed = m.IsPracticed
+            })).ToList();
+
+            try
+            {
+                await database.InvokeVoidAsync("save", activeStart.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture), progress);
             }
-            return dailyAppointments;
-        }).ToList();
-
-        await LoadProgress();
-    }
-
-    // Method to generate dates based on the start and end date of the mantra schedule
-    private List<DateTime> GenerateDatesForMantra(DateTime startDate, DateTime endDate)
-    {
-        var dates = new List<DateTime>();
-        for (var date = startDate; date <= endDate; date = date.AddDays(1))
-        {
-            dates.Add(date);
-        }
-        return dates;
-    }
-
-    // Color the slot depending on the status of all mantras for that day
-    void OnSlotRender(SchedulerSlotRenderEventArgs args)
-    {
-        var appointmentsForTheDay = appointments.Where(a => a.Start.Date == args.Start.Date).ToList();
-
-        // Check if all mantras for the day are marked as complete (IsPracticed = true)
-        bool allComplete = appointmentsForTheDay.All(a => a.Mantras.All(m => m.IsPracticed));
-
-        // If all appointments for the day are complete, mark the day green, otherwise yellow
-        if (allComplete)
-        {
-            args.Attributes["style"] = "background-color: green;";
-        }
-        else
-        {
-            args.Attributes["style"] = "background-color: yellow;";
-        }
-    }
-
-    async Task OnSlotSelect(SchedulerSlotSelectEventArgs args)
-    {
-        var data = new Appointment
-        {
-            Start = args.Start,
-            End = args.End,
-            Text = "New Appointment"
-        };
-
-        var result = await DialogService.OpenAsync<EditMantraPopup>("Edit Mantra", new Dictionary<string, object>
-        {
-            { "Start", args.Start },
-            { "End", args.End },
-            { "Appointment", data }
-        });
-
-        if (result != null)
-        {
-            appointments.Add(result); // Add the new appointment to the list
+            catch (Exception ex) when (ex is JSException or JsonException)
+            {
+                storageError = "Progress could not be saved to IndexedDB. This edit was not applied. Check browser storage access and reload before trying again.";
+                return;
+            }
+            appointments = prospective;
             await scheduler.Reload();
         }
-    }
-
-    async Task OnAppointmentSelect(SchedulerAppointmentSelectEventArgs<Appointment> args)
-    {
-        var selectedAppointment = args.Data;
-
-        // Open the dialog to edit the selected appointment
-        var updatedAppointment = await DialogService.OpenAsync<EditMantraPopup>("Edit Mantra", new Dictionary<string, object>
+        finally
         {
-            { "Appointment", selectedAppointment }
-        });
-
-        if (updatedAppointment != null)
-        {
-            var index = appointments.IndexOf(selectedAppointment);
-            if (index >= 0)
-            {
-                appointments[index] = updatedAppointment; // Update the appointment
-                await scheduler.Reload();
-            }
-            await SaveProgress();
-        }
-    }
-
-    // Save the progress to LocalStorage
-    private async Task SaveProgress()
-    {
-        var progress = appointments.SelectMany(a => a.Mantras.Select(m => new
-        {
-            Date = a.Start.Date,
-            MantraName = m.Name,
-            IsPracticed = m.IsPracticed
-        })).ToList();
-
-        await LocalStorage.SetItemAsync("mantraProgress", progress);
-    }
-
-    // Load the progress from LocalStorage
-    private async Task LoadProgress()
-    {
-        var savedProgress = await LocalStorage.GetItemAsync<List<dynamic>>("mantraProgress");
-
-        if (savedProgress != null)
-        {
-            foreach (var progress in savedProgress)
-            {
-                var appointment = appointments.FirstOrDefault(a => a.Start.Date == progress.Date);
-                if (appointment != null)
-                {
-                    var mantra = appointment.Mantras.FirstOrDefault(m => m.Name == progress.MantraName);
-                    if (mantra != null)
-                    {
-                        mantra.IsPracticed = progress.IsPracticed;
-                    }
-                }
-            }
+            editing = false;
         }
     }
 }

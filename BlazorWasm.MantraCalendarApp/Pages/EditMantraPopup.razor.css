@@ -1,0 +1,15 @@
+.dialog-intro { color: var(--muted); font-size: 13px; line-height: 1.7; margin: 0 0 20px; }
+.mantra-list { display: grid; gap: 8px; }
+.mantra-row { display: flex; align-items: center; gap: 14px; border: 1px solid var(--line); border-radius: 10px; padding: 4px 12px; min-height: 60px; }
+.mantra-row.is-complete { background: var(--green-soft); border-color: #bbcdb9; }
+.mantra-row ::deep .rz-label { font-size: 15px; line-height: 1.9; padding: 10px 0; overflow-wrap: anywhere; cursor: pointer; }
+.mantra-row ::deep .rz-chkbox { flex-shrink: 0; min-width: 44px; min-height: 44px; display: flex; align-items: center; justify-content: center; }
+.dialog-actions { position: sticky; bottom: -24px; display: flex; justify-content: flex-end; gap: 10px; padding: 20px 0 8px; margin-top: 12px; background: white; border-top: 1px solid var(--line); }
+.dialog-actions ::deep .rz-button { min-height: 46px; border-radius: 9px; text-transform: none; letter-spacing: 0; }
+@media (max-width: 640px) {
+    .mantra-row { gap: 4px; padding: 4px 8px; }
+    .mantra-row ::deep .rz-label { font-size: 14px; }
+    .dialog-actions { bottom: -20px; }
+    .dialog-actions ::deep .rz-button { flex: 1; }
+}
+.mantra-row ::deep .rz-chkbox-box { width: 24px; height: 24px; top: 50%; left: 50%; transform: translate(-50%, -50%); border-color: #7b897b; }

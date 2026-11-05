@@ -1,48 +1,31 @@
-﻿@page "/edit-mantra-popup"
 @using BlazorWasm.MantraCalendarApp.Services
-@using Blazored.LocalStorage
 @inject DialogService DialogService
 
+<p class="dialog-intro">Take a moment to reflect. Mark the mantras you practiced today.</p>
 <RadzenTemplateForm TItem="Appointment" Data="@model" Submit="@OnSubmit">
-    <RadzenStack Gap="1rem">
-        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Wrap="FlexWrap.Wrap">
-            <RadzenLabel Text="Mantra Name" Style="width: 6rem;" />
-            <RadzenTextBox @bind-Value="@model.Text" Name="Text" Style="width: 12rem;" Disabled="true" />
-        </RadzenStack>
-
-        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Wrap="FlexWrap.Wrap">
-            <RadzenLabel Text="Description" Style="width: 6rem;" />
-            <RadzenTextBox @bind-Value="@model.Description" Name="Description" Style="width: 12rem;" Disabled="true" />
-        </RadzenStack>
-
-        <!-- Loop through each mantra for this day -->
-        @foreach (var mantra in model.Mantras)
+    <div class="mantra-list">
+        @for (var i = 0; i < model.Mantras.Count; i++)
         {
-            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Wrap="FlexWrap.Wrap">
-                <RadzenLabel Text="@mantra.Name" Style="width: 6rem;" />
-                <RadzenToggleButton @bind-Value="mantra.IsPracticed" Text="Complete" Icon="check_circle" Disabled="@mantra.IsPracticed" />
-            </RadzenStack>
+            var mantra = model.Mantras[i];
+            var controlName = $"mantra-{i}";
+            <div class="mantra-row @(mantra.IsPracticed ? "is-complete" : "")">
+                <RadzenCheckBox TValue="bool" @bind-Value="mantra.IsPracticed" Name="@controlName" />
+                <RadzenLabel Component="@controlName" Text="@mantra.Name" Style="flex: 1;" lang="my" />
+            </div>
         }
-
-        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End">
-            <RadzenButton ButtonType="ButtonType.Submit" Text="Save" />
-        </RadzenStack>
-    </RadzenStack>
+    </div>
+    <div class="dialog-actions">
+        <RadzenButton ButtonType="ButtonType.Button" ButtonStyle="ButtonStyle.Light" Text="Cancel" Click="@(() => DialogService.Close())" />
+        <RadzenButton ButtonType="ButtonType.Submit" Text="Save practice" />
+    </div>
 </RadzenTemplateForm>
 
 @code {
-    [Parameter]
-    public Appointment Appointment { get; set; }
+    [Parameter, EditorRequired]
+    public Appointment Appointment { get; set; } = new();
+    private Appointment model = new();
 
-    Appointment model = new Appointment();
-
-    protected override void OnParametersSet()
-    {
-        model = Appointment ?? new Appointment();
-    }
-
-    void OnSubmit(Appointment updatedAppointment)
-    {
-        DialogService.Close(updatedAppointment); // Close and pass the updated appointment back
-    }
+    protected override void OnParametersSet() => model = Appointment.Copy();
+    private void OnSubmit(Appointment updatedAppointment) => DialogService.Close(updatedAppointment);
 }
+

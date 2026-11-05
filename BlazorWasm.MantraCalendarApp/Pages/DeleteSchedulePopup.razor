@@ -1,0 +1,49 @@
+@inject DialogService DialogService
+
+<div @onkeydown="OnKeyDown">
+    @if (EmptyAll)
+    {
+    <p>Permanently remove <strong>@RecoveryCount recovery @(RecoveryCount == 1 ? "copy" : "copies")</strong> from Recently deleted?</p>
+    <p>The listed recovery history will be permanently removed from this browser and cannot be restored from Recently deleted afterward. Saved schedules and exported backup files will be kept. Recovery would require a backup that already contains these copies. Copies added elsewhere while this confirmation is open will be kept.</p>
+    }
+    else
+    {
+    <p>@(Permanent ? "Permanently delete the recovery copy for" : "Delete the schedule from") <strong>@StartDate.ToString("d MMM yyyy") to @StartDate.AddDays(89).ToString("d MMM yyyy")</strong>?</p>
+    @if (Permanent)
+    {
+    <p>This copy contains @CompletedCount completed mantras. Its recovery history will be permanently removed from this browser. It cannot be restored from Recently deleted afterward. Saved schedules, other deleted copies and exported backup files will be kept. Recovery would require a backup that already contains this copy.</p>
+    }
+    else
+    {
+    <p>This schedule and its progress will move to Recently deleted schedules, where you can restore them later, even after reloading. Other saved schedules, deleted schedules and exported backup files will be kept.</p>
+    }
+    }
+    <div class="confirmation-actions">
+        <button @ref="keepButton" type="button" class="keep" @onclick="@(() => DialogService.Close(false))">@(EmptyAll ? "Keep recovery history" : Permanent ? "Keep recovery copy" : "Keep schedule")</button>
+        <button type="button" class="delete" @onclick="@(() => { DialogService.Close(true); })">@(EmptyAll ? "Empty recently deleted" : Permanent ? "Permanently delete" : "Delete schedule")</button>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public DateTime StartDate { get; set; }
+    [Parameter]
+    public bool Permanent { get; set; }
+    [Parameter]
+    public int CompletedCount { get; set; }
+    [Parameter]
+    public bool EmptyAll { get; set; }
+    [Parameter]
+    public int RecoveryCount { get; set; }
+    [Parameter]
+    public IJSObjectReference? Database { get; set; }
+    private ElementReference keepButton;
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender) await keepButton.FocusAsync();
+    }
+    private void OnKeyDown(KeyboardEventArgs args)
+    {
+        if (args.Key == "Escape") DialogService.Close(false);
+    }
+}
