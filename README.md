@@ -1,192 +1,173 @@
-# Mantra Practice Calendar
+# Mantra Practice Calendar — နေ့စဉ် ဂုဏ်တော်ရွတ်ဖတ်မှု မှတ်တမ်း
 
-A local Buddhist mantra practice tracker built with .NET 8 Blazor WebAssembly,
-Radzen.Blazor and native IndexedDB. Choose a start date for the supplied Burmese 90-day
-sequence (162 individual mantra entries); the end date is calculated automatically.
+နေ့စဉ် ဂုဏ်တော်ရွတ်ဖတ်မှုကို ပြက္ခဒိန်ပေါ်မှာ မှတ်သားပြီး မိမိလေ့ကျင့်မှုကို ပြန်ကြည့်နိုင်ဖို့ ရေးထားတဲ့ Web App ဖြစ်ပါတယ်။ စတင်မယ့်ရက်ကို ကိုယ်တိုင်ရွေးချယ်ပြီး ရက် ၉၀ အတွက် သတ်မှတ်ထားတဲ့ ဂုဏ်တော်အစီအစဉ်အတိုင်း အသုံးပြုနိုင်ပါတယ်။
 
-## Run
+C# နဲ့ Blazor WebAssembly ကို လေ့လာသူတွေအတွက် ပြက္ခဒိန် UI၊ နေ့စဉ်မှတ်တမ်း၊ IndexedDB နဲ့ browser ထဲမှာ data သိမ်းဆည်းခြင်း၊ JSON backup နဲ့ data ပြန်ယူခြင်းတို့ကို လေ့လာနိုင်တဲ့ project တစ်ခုလည်း ဖြစ်ပါတယ်။
 
-Requires the .NET 8 SDK or a compatible installed SDK.
+## Summary
 
-```powershell
+> စတင်မယ့်ရက်ကို ရွေးပါ။ ပြက္ခဒိန်ထဲက နေ့တစ်နေ့ကို နှိပ်ပြီး ရွတ်ဖတ်ပြီးတဲ့ ဂုဏ်တော်တွေကို အမှန်ခြစ်ပါ။ **Save practice** နှိပ်လိုက်ရင် မှတ်တမ်းကို ဒီ browser ထဲမှာ သိမ်းထားပေးပါမယ်။
+
+1. **Practice start date** မှာ စတင်မယ့်ရက်ကို ရွေးပြီး **Use schedule** နှိပ်ပါ။
+2. ပြက္ခဒိန်ထဲက ရက်တစ်ရက်ကို နှိပ်ပြီး မိမိရွတ်ဖတ်ပြီးတဲ့ ဂုဏ်တော်တွေကို မှတ်သားပါ။
+3. **Save practice** နှိပ်ပြီး သိမ်းပါ။ **Cancel** နှိပ်ရင် အခုဖွင့်ထားတဲ့ ပြင်ဆင်မှုတွေကို မသိမ်းပါ။
+4. **Saved schedules** ကနေ အရင်သိမ်းထားတဲ့ အစီအစဉ်တွေကို ပြန်ဖွင့်နိုင်ပါတယ်။
+5. **Export backup** နဲ့ JSON ဖိုင်ထုတ်သိမ်းထားပြီး နောက်မှ **Import a backup** နဲ့ ပြန်ယူနိုင်ပါတယ်။
+
+## Preview
+
+![Desktop calendar with daily progress and schedule tools](docs/images/calendar-desktop.png)
+
+Desktop မှာ ပြက္ခဒိန်နဲ့ မှတ်တမ်းစီမံခန့်ခွဲတဲ့ controls တွေကို ဘေးချင်းယှဉ် ပြထားပါတယ်။ Mobile မှာ ပြက္ခဒိန်ကို အရင်ပြပြီး controls တွေကို အောက်မှာ ပြထားပါတယ်။ **Manage schedules** ကနေ controls ဆီ တိုက်ရိုက်သွားနိုင်ပါတယ်။
+
+## Features
+
+- စတင်ရက်ကို ရွေးချယ်နိုင်တဲ့ ရက် ၉၀ ဂုဏ်တော်အစီအစဉ်။
+- နေ့စဉ် ရွတ်ဖတ်ပြီးမှုနဲ့ အစီအစဉ်တစ်ခုလုံးရဲ့ တိုးတက်မှုကို ကြည့်နိုင်ခြင်း။
+- Month, Planner, Timeline နဲ့ Year ပြက္ခဒိန် view များ။
+- အစီအစဉ်တစ်ခုချင်းစီရဲ့ မှတ်တမ်းကို သီးခြားသိမ်းထားပြီး ပြန်ရွေးနိုင်ခြင်း။
+- IndexedDB ထဲမှာ သိမ်းထားတဲ့အတွက် page reload လုပ်ပြီးလည်း မှတ်တမ်းကျန်ရှိခြင်း။
+- အစီအစဉ်၊ ရွတ်ဖတ်မှုမှတ်တမ်းနဲ့ Recently deleted recovery copies တွေကို JSON backup ထုတ်သိမ်းခြင်း၊ ပြန်ယူခြင်း။
+- ဖျက်ထားတဲ့ အစီအစဉ်တွေကို **Recently deleted schedules** ကနေ ပြန်ယူနိုင်ခြင်း။
+- Recovery copy တစ်ခုချင်းစီ အပြီးဖျက်ခြင်းနဲ့ Recently deleted အားလုံးရှင်းခြင်းမတိုင်မီ confirmation ပြခြင်း။
+- Backup ထုတ်ခဲ့တဲ့အချိန်နဲ့ နောက်ပိုင်း data ပြောင်းလဲမှု ရှိမရှိကို permanent-delete dialog ထဲမှာ ပြခြင်း။
+- Mobile layout၊ keyboard navigation နဲ့ reduced-motion setting ကို ပံ့ပိုးထားခြင်း။
+
+The supplied sequence covers **90 days and 162 individual mantra entries**. Its original template runs from **9 July to 6 October 2025**; choosing another start date shifts the same sequence to that period.
+
+## Tech Stack
+
+| Part | Technology |
+| --- | --- |
+| Language | C# |
+| Application | .NET 8, Blazor WebAssembly |
+| UI components | Radzen.Blazor |
+| Browser storage | Native IndexedDB |
+| Backup files | JSON |
+| Styling | CSS, self-hosted Geist with Burmese font fallback |
+| Checks | .NET console assertions and Playwright browser scripts |
+
+No backend server or account is required for saving practice data. The development server serves the application; journal data is stored in the browser.
+
+## Getting Started
+
+### Requirements
+
+- .NET 8 SDK, or a compatible newer SDK.
+- A modern browser with IndexedDB enabled.
+- Git to clone the repository.
+
+### Run locally
+
+Clone this repository, open its root directory, then run:
+
+```sh
+dotnet restore BlazorWasm.MantraCalendar.sln
 dotnet run --project BlazorWasm.MantraCalendarApp --launch-profile http
 ```
 
-Open http://localhost:5094. Choose a practice start date and press Use schedule.
-Select a calendar day, check practiced mantras and Save practice. Uncheck to undo.
-Cancel or close discards draft changes. Tab reaches appointments; Enter or Space opens them.
-A fresh journal starts on the device's current date. Supported start dates are 0001-01-01
-through 9999-10-02 so the entire 90-day schedule fits.
+Open [http://localhost:5094](http://localhost:5094).
 
-## Verify
+A fresh journal starts with the device's current date. To use a different period, choose a start date and select **Use schedule**. Existing periods retain their progress when you switch.
 
-```powershell
-dotnet run --project tests/MantraCalendar.Checks
-dotnet build BlazorWasm.MantraCalendarApp
+### Build
+
+```sh
+dotnet build BlazorWasm.MantraCalendar.sln
 ```
 
-The package-free runner checks inclusive dates, sequence totals, independent daily state,
-isolated drafts, JSON compatibility, selected start dates, year boundaries and leap days.
-Browser validation records are under specs/.
+## Backup & Restore
 
-## IndexedDB storage
+### Export a backup
 
-Database: mantra-practice-calendar, version 1. Object store: journal.
-The activeStartDate key remembers the selected schedule. schedule:YYYY-MM-DD keys hold
-that schedule's Date/MantraName/IsPracticed records. Switching schedules retains earlier
-progress; overlapping dates in different schedules remain independent.
+**Export backup** downloads a file named **mantra-backup.json** containing:
 
-Writes finish only after the IndexedDB transaction commits. Storage failures block editing
-and show an error; failed saves do not change displayed progress. There is no localStorage fallback.
+- All saved schedules and their practice progress.
+- The currently selected schedule.
+- All recently deleted recovery copies.
 
-On the first IndexedDB initialization only, existing mantraProgress localStorage records are
-read and imported into their original July 9, 2025 schedule. No localStorage writes or deletion
-occur. The legacy value remains an untouched backup and is never read again once initialization
-has committed. Malformed legacy data is reported without writing a partial journal.
+Save the downloaded file somewhere you can find again. Backup files contain readable practice history; keep them somewhere appropriate for that information.
 
-Data stays in this browser and origin. Clearing site data removes it. There are no accounts,
-cloud synchronization or automatic cross-device backups. Concurrent tabs editing the same
-schedule use the last committed full-schedule save.
+### Restore a backup
 
-## Spec Kit
+1. Under **Import a backup**, choose a JSON file of **5 MiB or less**.
+2. Review the schedule, replacement and recovery-copy counts.
+3. Select **Restore backup**, or **Cancel** to leave everything unchanged.
 
-Specify CLI 1.3.0 initialized with the Codex integration and PowerShell scripts.
-Skills live in .agents/skills, shared infrastructure in .specify/, and the current constitution
-in .specify/memory/constitution.md. Feature specifications, plans, tasks and validation are
-in specs/001-mantra-practice-calendar, specs/002-modern-mobile-ui and
-specs/003-selectable-indexeddb-schedules. Earlier fixed-date/localStorage docs are historical.
+For matching start dates, imported progress replaces the stored progress. Schedules absent from the file remain saved. Recovery copies merge by unique ID; existing copies are kept, and importing the same file again does not duplicate them.
 
-The real IndexedDB assertion function is tests/IndexedDb.checks.js. In a fresh isolated browser
-context, open /manifest.webmanifest on the running server, paste the file into DevTools and call
-checkIndexedDb(). It refuses to run if a journal already exists; it writes only the test context.
+New exports use backup **version 2**. Older **version 1** files remain importable and do not remove existing recovery history. Invalid files and failed restore transactions leave the journal unchanged.
 
-## Export and restore backups
+## Delete & Recover
 
-Use Export backup to download mantra-backup.json containing every saved schedule, its
-progress, the selected start date and all recently deleted recovery copies. Unpracticed
-schedules and recovery-only journals are included. The file stays
-on your device; it is not uploaded to a service.
+| Action | Result |
+| --- | --- |
+| **Delete selected schedule** | Moves that schedule and its progress into Recently deleted after confirmation. |
+| **Restore selected schedule** | Returns the selected recovery copy to saved schedules and opens it. |
+| **Permanently delete selected copy** | Removes only the selected recovery copy after confirmation. |
+| **Empty recently deleted** | Removes the recovery copies listed when confirmation opened; saved schedules remain. |
 
-To restore, choose the JSON file under Import a backup (maximum 5 MiB), review the schedule
-and replacement counts plus the recovery-history counts, then select Restore backup. Cancel discards the preview. Progress
-for matching start dates is replaced by the file; schedules absent from the file are kept.
-The entire restore commits together in IndexedDB. Invalid files or failed transactions leave
-the journal unchanged. Recovery entries merge by their unique IDs: existing entries are kept
-unchanged, unrelated history remains, and repeated imports do not create duplicate copies.
-Reload retains the restored selection, progress and recovery list. A backup containing only
-recovery history preserves the current active schedule, if one exists.
+Recovery copies remain available after reload and have no automatic expiry. Repeated deletions create separate copies, even for the same start date. Restoring a copy does not overwrite an existing saved schedule with the same start date.
 
-New exports use format "mantra-practice-calendar", version 2, activeStartDate, schedules and
-deletedSchedules. Each saved schedule contains startDate and a progress array with date,
-mantraName and isPracticed. Each deleted copy also includes its id and UTC deletedAt timestamp.
-activeStartDate is null when there are no saved schedules. Dates, timestamps, record types,
-schedule membership and duplicate keys are validated. The file limit remains 5 MiB.
-Version 1 backups (saved schedules only) remain importable and leave recovery history intact.
-Unknown versions are rejected. Save another export before replacing progress you
-may want to retain; backup files contain readable practice history.
+Both permanent-delete dialogs let you export a backup before confirming. They show the last export time and warn if schedules, progress or recovery history differ from that backup. Status refreshes while the dialog is open and when you return to the tab. Permanent deletion is disabled while a status check or export is running; **Keep**, **Escape** and **Close** remain available.
 
-## Switch between saved schedules
+If a status check fails, a coverage warning is shown before the delete button becomes available again. Exporting is optional: a warning does not prevent you from confirming permanent deletion.
 
-Use the Saved schedules dropdown to open a previous practice period immediately, without
-re-entering its start date. Periods are listed newest first with their start and end dates,
-including schedules with no recorded progress. The current period is selected automatically.
-The list refreshes after creating a period or restoring a backup, and the selected schedule
-is remembered after reload. Keep using Practice start date and Use schedule to create a period.
+**A download-start time does not prove the file was saved.** Once recovery history is permanently removed, restoring it requires a backup that contains those copies. Status checks do not lock other tabs, so data can change after a check finishes.
 
-## Delete a saved schedule
+## Data & Privacy
 
-Open the period in Saved schedules and choose Delete selected schedule. The confirmation names
-the dates and warns that progress will be removed. Keep schedule is focused by default;
-Keep, Enter on that button, Escape and Close cancel. Only Delete schedule confirms removal.
-Other schedules and exported backup files are kept. The newest remaining period opens afterward.
-Deleting the final period leaves an empty journal after reload. Use Recently deleted to recover it,
-create another period, or import a backup. Legacy progress is not reimported.
+Practice data stays in the current browser profile and site address. There are no accounts or cloud synchronization. Using another browser, device or site address creates a separate journal.
 
-## Recently deleted schedules
+- Clearing site data or removing the browser profile can erase schedules and recovery history.
+- Export a backup before clearing data or moving to another device.
+- Simultaneous edits to the same schedule in different tabs use the last committed full-schedule save.
+- Normal storage uses IndexedDB; there is no localStorage fallback.
+- On first initialization only, progress from the older localStorage version can be imported into its original July 2025 schedule. That legacy value is not changed or deleted.
 
-Recently deleted schedules lists recovery copies newest first, with their practice periods and
-completion counts. Choose a copy and press Restore selected schedule to restore its progress
-and open it. Other deleted and saved schedules are kept. The list remains available after reload,
-including when no saved schedules remain; copies have no automatic expiry.
+## Project Structure
 
-Every successful deletion creates a separate copy, including repeated deletions of the same
-start date. The previous single Undo record is migrated automatically without losing progress.
-Restoring removes only the selected recovery entry. Failed writes leave it available for retry.
+```text
+BlazorWasm.MantraCalendarApp/
+├── Layout/                     # Application shell
+├── Pages/                      # Calendar, practice editor and delete dialogs
+├── Services/                   # Mantra sequence and schedule models
+└── wwwroot/
+    ├── css/                    # Shared styling
+    ├── fonts/                  # Self-hosted Geist and its license
+    └── js/practice-db.js        # IndexedDB, backups and recovery
+tests/                          # Schedule, storage and browser checks
+specs/                          # Feature specifications and validation records
+.specify/                       # Spec Kit configuration and templates
+.agents/skills/                 # Codex Spec Kit workflows
+DESIGN.md                       # UI design guidelines
+```
 
-Restoration never overwrites a saved schedule with the same start date. Such conflicts leave
-both copies unchanged. Recovery copies remain in this browser's IndexedDB and are included in
-version 2 JSON backups, so they can be exported and restored without first undeleting them.
+## Testing
 
-## Permanently remove recovery history
+Run the package-free schedule checks:
 
-Choose an entry under Recently deleted schedules and select Permanently delete selected copy.
-The confirmation identifies the period and completion count and explains the loss of browser
-recovery. Keep recovery copy is focused by default; Keep, Enter, Escape and Close cancel.
-Only Permanently delete removes that recovery ID. Saved schedules, active selection, other
-deleted copies (even for the same period) and downloaded backup files remain unchanged.
+```sh
+dotnet run --project tests/MantraCalendar.Checks
+```
 
-The removed copy can no longer be restored from Recently deleted. Recovery requires an existing
-backup containing it; importing that backup can put the copy back. Removing the last recovery
-entry hides the list. Failed transactions preserve the entire journal and recovery history.
+For browser checks, install Node.js and Microsoft Edge, keep the app running at **http://localhost:5094**, and make **playwright-core** available to Node. For example, from the repository root:
 
-## Empty recently deleted
+```sh
+npm install --no-save --package-lock=false playwright-core
+node tests/ResponsiveUi.checks.cjs
+node tests/DialogBackup.checks.cjs
+node tests/CompleteDeleteFlow.checks.cjs
+```
 
-Empty recently deleted removes all recovery copies currently listed after a separate counted
-confirmation. Keep recovery history is focused by default; Keep, Enter, Escape and Close cancel.
-Only the final Empty recently deleted confirmation removes those copies, together in one
-IndexedDB transaction. Failed transactions roll back the full batch.
+These scripts use fresh browser contexts and synthetic schedules. They cover responsive layouts, recording practice, backup warnings, export/import, final delete confirmations and recovery after reload. They do not use your existing browser journal. Screenshots are written to the Git-ignored **outputs/** directory.
 
-Saved schedules, their progress, active selection and exported backup files are kept. Copies
-added in another tab while confirmation is open are also kept because they were not confirmed.
-The removed history cannot be restored from this browser; an existing version 2 backup that
-contains those copies can recover it later.
+Additional IndexedDB assertions are in **tests/IndexedDb.checks.js**. Run its **checkIndexedDb()** function from a fresh isolated browser context on the app's origin; it refuses to run if a journal already exists.
 
-Both permanent-removal confirmations offer Export backup before deletion. This downloads the
-complete version 2 JSON backup, including saved schedules, progress and all recently deleted
-copies, while keeping the confirmation open. Deletion is disabled while the export is running;
-Keep and cancellation remain available. Export errors appear in the dialog and allow retry.
-Save the downloaded JSON file before confirming deletion: a download-start message does not
-confirm that the file has been saved. The existing 5 MiB backup limit applies.
+Feature details and validation records are in [specs/](specs/). The interface rules are in [DESIGN.md](DESIGN.md).
 
-Permanent-delete dialogs show the last backup download start time in the browser's local
-time, or state that no export is recorded. The timestamp is kept in IndexedDB and updated
-by both the main backup action and dialog exports. It stays local to this browser; importing
-a backup does not replace it. It does not guarantee a file was saved or cover later edits.
+## Contributing
 
-Permanent-delete confirmations warn when the current backup contents differ from the last
-exported snapshot (schedules, progress, active selection or recovery history). Exporting a
-fresh backup refreshes this warning. A SHA-256 fingerprint is stored alongside the export
-time in IndexedDB, outside the backup format. Older exports without a fingerprint show
-coverage as unknown. While either permanent-delete dialog is open, its backup warning and last-export time refresh every two seconds, including changes and exports from other tabs. Checking stops when the dialog closes. Background timers may pause, so returning to a visible tab or focusing its window also refreshes the warning immediately. These listeners are removed when the dialog closes.
+Bug reports, documentation improvements and pull requests are welcome. Include reproduction steps for bugs, and run the checks relevant to your change. Changes to persistence, backup or deletion behavior should include checks that existing progress remains recoverable.
 
-
-
-
-During initial and automatic backup-status checks, permanent-delete confirmations show
-Checking backup status and disable permanent deletion and export until the check finishes.
-Keep, Escape and Close remain available. Failed checks show the coverage warning and finish
-the checking state, allowing users to review that warning before choosing whether to proceed.
-Ordinary saved-schedule deletion is unchanged.
-
-The backup-safety flow is verified together in `specs/018-backup-safety-complete/spec.md`.
-A return-to-tab refresh arriving during a check queues another check, keeping deletion
-blocked until the latest check finishes. Closing during a pending check or export stops
-further dialog updates. Checks do not lock other tabs; another tab can still change data
-after a completed check.
-
-## Interface design
-
-DESIGN.md is the visual source of truth, based on the stitch-design-taste skill. The calendar
-leads the page; schedule, recovery and backup tools sit beside it on desktop and below it on
-mobile. Manage schedules jumps directly to those tools. Geist is self-hosted under the OFL
-license in wwwroot/fonts. Motion respects prefers-reduced-motion.
-
-Additional browser checks require an externally available playwright-core module, installed
-Edge, and the running app at localhost:5094:
-
-    node tests/ResponsiveUi.checks.cjs
-    node tests/DialogBackup.checks.cjs
-    node tests/CompleteDeleteFlow.checks.cjs
-
-Checks use fresh browser contexts with synthetic schedules. Screenshot output is excluded
-from Git. See specs/019-stitch-calendar-redesign/spec.md for the validation record.
+The bundled Geist font includes its [SIL Open Font License](BlazorWasm.MantraCalendarApp/wwwroot/fonts/OFL.txt).
