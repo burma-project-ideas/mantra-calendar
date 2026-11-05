@@ -1,4 +1,5 @@
 @inject DialogService DialogService
+@implements IAsyncDisposable
 
 <div @onkeydown="OnKeyDown">
     @if (EmptyAll)
@@ -18,9 +19,22 @@
     <p>This schedule and its progress will move to Recently deleted schedules, where you can restore them later, even after reloading. Other saved schedules, deleted schedules and exported backup files will be kept.</p>
     }
     }
+    @if (Permanent || EmptyAll)
+    {
+        <div class="backup-action" aria-busy="@refreshing.ToString().ToLowerInvariant()">
+            @if (refreshing) { <p class="backup-checking" role="status">Checking backup status…</p> }
+            <p class="last-backup">@lastBackup</p>
+            @if (backupWarning is not null) { <p class="export-error backup-warning" role="alert">@backupWarning</p> }
+            <p>Export time records when a download started in this browser; it does not confirm the file was saved or includes later changes.</p>
+            <button type="button" class="keep" @onclick="ExportBackup" disabled="@(exporting || refreshing || Database is null)">@(exporting ? "Exporting backup…" : "Export backup")</button>
+            <p>Includes all saved schedules, progress and recently deleted copies. Exporting does not delete anything.</p>
+            @if (exportError is not null) { <p class="export-error" role="alert">@exportError</p> }
+            @if (exportStatus is not null) { <p class="export-status" role="status">@exportStatus</p> }
+        </div>
+    }
     <div class="confirmation-actions">
         <button @ref="keepButton" type="button" class="keep" @onclick="@(() => DialogService.Close(false))">@(EmptyAll ? "Keep recovery history" : Permanent ? "Keep recovery copy" : "Keep schedule")</button>
-        <button type="button" class="delete" @onclick="@(() => { DialogService.Close(true); })">@(EmptyAll ? "Empty recently deleted" : Permanent ? "Permanently delete" : "Delete schedule")</button>
+        <button type="button" class="delete" disabled="@DeleteBlocked" @onclick="@(() => { if (!DeleteBlocked) DialogService.Close(true); })">@(EmptyAll ? "Empty recently deleted" : Permanent ? "Permanently delete" : "Delete schedule")</button>
     </div>
 </div>
 
@@ -38,10 +52,128 @@
     [Parameter]
     public IJSObjectReference? Database { get; set; }
     private ElementReference keepButton;
+    private bool exporting;
+    private string? exportError;
+    private string? exportStatus;
+    private string lastBackup = "Checking last backup export…";
+    private string? backupWarning;
+    private PeriodicTimer? backupTimer;
+    private bool disposed;
+    private bool refreshing = true;
+    private bool refreshPending;
+    private bool DeleteBlocked => exporting || ((Permanent || EmptyAll) && refreshing);
+    private DotNetObjectReference<DeleteSchedulePopup>? callback;
+    private IJSObjectReference? tabWatcher;
+
+    private async Task ExportBackup()
+    {
+        if (exporting || refreshing || Database is null) return;
+        exporting = true;
+        exportError = exportStatus = null;
+        try
+        {
+            var exportedAt = await Database.InvokeAsync<string>("downloadBackup");
+            if (disposed) return;
+            lastBackup = $"Last backup exported: {exportedAt} (local time).";
+            await RefreshBackupStatus();
+            exportStatus = "Backup download started. Save the JSON file before confirming deletion.";
+        }
+        catch (JSException)
+        {
+            exportError = "The backup could not be exported. Nothing was deleted. Check browser storage and download access, and the 5 MiB backup limit, then try again.";
+        }
+        finally
+        {
+            exporting = false;
+            if (refreshPending && !disposed) await RefreshOnReturn();
+        }
+    }
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender) await keepButton.FocusAsync();
+        if (!firstRender) return;
+        await keepButton.FocusAsync();
+        if ((Permanent || EmptyAll) && Database is not null)
+        {
+            callback = DotNetObjectReference.Create(this);
+            tabWatcher = await Database.InvokeAsync<IJSObjectReference>("watchBackupTab", callback);
+            if (disposed) { await StopWatchingTab(); return; }
+            await RefreshBackupStatus();
+            if (disposed) return;
+            StateHasChanged();
+            backupTimer = new PeriodicTimer(TimeSpan.FromSeconds(2));
+            _ = WatchBackupChanges(backupTimer);
+        }
     }
+
+    private async Task RefreshBackupStatus()
+    {
+        refreshing = true;
+        if (!disposed) StateHasChanged();
+        try
+        {
+            do
+            {
+                refreshPending = false;
+                try
+                {
+                    var exportedAt = await Database!.InvokeAsync<string?>("lastBackupExportedAt");
+                    lastBackup = exportedAt is null ? "No backup export recorded in this browser."
+                        : $"Last backup exported: {exportedAt} (local time).";
+                }
+                catch (JSException) { lastBackup = "Last backup export time is unavailable."; }
+                if (disposed) return;
+                await RefreshBackupWarning();
+            }
+            while (refreshPending && !disposed);
+        }
+        finally
+        {
+            refreshing = false;
+            if (!disposed) StateHasChanged();
+        }
+    }
+
+    private async Task WatchBackupChanges(PeriodicTimer timer)
+    {
+        while (await timer.WaitForNextTickAsync())
+        {
+            await RefreshOnReturn();
+        }
+    }
+
+    [JSInvokable]
+    public Task RefreshOnReturn() => InvokeAsync(async () =>
+    {
+        if (disposed) return;
+        if (exporting || refreshing) { refreshPending = true; return; }
+        await RefreshBackupStatus();
+    });
+
+    private async Task StopWatchingTab()
+    {
+        if (tabWatcher is not null)
+        {
+            await tabWatcher.InvokeVoidAsync("dispose");
+            await tabWatcher.DisposeAsync();
+            tabWatcher = null;
+        }
+        callback?.Dispose();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        disposed = true;
+        backupTimer?.Dispose();
+        await StopWatchingTab();
+    }
+
+    private async Task RefreshBackupWarning()
+    {
+        try { backupWarning = await Database!.InvokeAsync<string?>("backupChangesWarning"); }
+        catch (JSException) { backupWarning = "Backup coverage could not be checked. Export a new backup before permanently deleting recovery history."; }
+    }
+
     private void OnKeyDown(KeyboardEventArgs args)
     {
         if (args.Key == "Escape") DialogService.Close(false);
