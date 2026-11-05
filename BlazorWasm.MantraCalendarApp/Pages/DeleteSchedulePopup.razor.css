@@ -1,11 +1,16 @@
 p { font-size: 14px; line-height: 1.7; color: var(--ink); }
-.confirmation-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; }
-button { flex: 1; min-height: 44px; padding: 10px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; }
-.keep { color: var(--green); border: 1px solid var(--green); background: white; }
-.delete { color: white; border: 1px solid #9b3830; background: #9b3830; }
-.backup-action { padding-top: 12px; border-top: 1px solid var(--line); }
-.backup-action button { width: 100%; }
-.backup-action p { font-size: 12px; margin: 10px 0 0; }
-.backup-action .export-error { color: #8c2525; }
+.confirmation-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 22px; }
+button { min-height: 46px; padding: 11px 12px; border-radius: 9px; font: inherit; font-size: 14px; font-weight: 550; transition: transform .16s cubic-bezier(.22,1,.36,1), opacity .16s; }
+button:active:not(:disabled) { transform: translateY(1px); }
+.keep { color: var(--green); border: 1px solid #A6B6AD; background: white; }
+.delete { color: white; border: 1px solid var(--ink); background: var(--ink); }
+.backup-action { padding: 16px; margin-top: 20px; background: #F4F7F5; border: 1px solid var(--line); border-radius: 10px; }
+.backup-action button { width: 100%; margin-top: 14px; }
+.backup-action p { font-size: 14px; line-height: 1.6; margin: 10px 0 0; color: var(--muted); }
+.backup-action .last-backup { font-size: 13px; font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; }
+.backup-action .export-error { padding: 10px 12px; border-left: 3px solid var(--ink); background: #E7EDE9; color: var(--ink); }
 .backup-action .export-status { color: var(--green); }
-button:disabled { opacity: .5; cursor: not-allowed; }
+.backup-action .backup-checking { font-weight: 550; color: var(--green); animation: checking 1.4s ease-in-out infinite alternate; }
+@keyframes checking { from { opacity: .5; } to { opacity: 1; } }
+button:disabled { opacity: .45; cursor: not-allowed; }
+@media (max-width: 359px) { .confirmation-actions { grid-template-columns: 1fr; } }

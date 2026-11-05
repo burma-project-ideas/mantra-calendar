@@ -4,7 +4,8 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>BlazorWasm.MantraCalendarApp</title>
+    <title>Mantra Practice Calendar</title>
+    <meta name="theme-color" content="#315D4A" />
     <base href="/" />
     <link rel="stylesheet" href="css/bootstrap/bootstrap.min.css" />
     <link rel="stylesheet" href="css/app.css" />
@@ -18,17 +19,18 @@
 
 <body>
     <div id="app">
-        <svg class="loading-progress">
-            <circle r="40%" cx="50%" cy="50%" />
-            <circle r="40%" cx="50%" cy="50%" />
-        </svg>
-        <div class="loading-progress-text"></div>
+        <div class="loading-shell" role="status" aria-label="Loading your practice journal">
+            <div class="skeleton skeleton-brand" aria-hidden="true"></div>
+            <div class="skeleton skeleton-heading" aria-hidden="true"></div>
+            <p>Opening your practice journal…</p>
+            <div class="skeleton skeleton-calendar" aria-hidden="true"></div>
+        </div>
     </div>
 
     <div id="blazor-error-ui">
         An unhandled error has occurred.
         <a href="" class="reload">Reload</a>
-        <a class="dismiss">🗙</a>
+        <button type="button" class="dismiss" aria-label="Dismiss error">×</button>
     </div>
     <script src="_content/Radzen.Blazor/Radzen.Blazor.min.js"></script>
     <script src="_framework/blazor.webassembly.js"></script>

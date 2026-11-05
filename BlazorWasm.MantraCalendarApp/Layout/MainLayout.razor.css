@@ -1,19 +1,18 @@
-.app-shell { max-width: 1240px; margin: 0 auto; padding: 0 40px; }
-.app-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 104px; border-bottom: 1px solid var(--line); }
-.brand { display: inline-flex; align-items: center; gap: 12px; color: var(--ink); text-decoration: none; font-size: 23px; font-weight: 650; letter-spacing: -.5px; }
-.brand-mark { display: grid; place-items: center; width: 46px; height: 46px; border-radius: 15px; background: var(--green); color: white; }
-.brand-mark ::deep .rzi { font-size: 27px; }
-.brand-caption { display: block; margin-top: 2px; color: var(--muted); font-size: 9px; letter-spacing: 2px; font-weight: 600; }
-.local-note { display: flex; align-items: center; gap: 7px; color: var(--muted); font-size: 12px; }
-.local-note ::deep .rzi { color: var(--green); font-size: 17px; }
-.app-main { padding-top: 44px; }
-.app-footer { display: flex; justify-content: space-between; gap: 12px; padding: 24px 0 30px; color: var(--muted); font-size: 12px; }
-@media (max-width: 640px) {
-    .app-shell { padding: 0 16px; }
-    .app-header { min-height: 84px; }
-    .brand { gap: 9px; font-size: 21px; }
-    .brand-mark { width: 40px; height: 40px; border-radius: 12px; }
-    .local-note { max-width: 110px; font-size: 11px; line-height: 1.5; }
-    .app-main { padding-top: 28px; }
-    .app-footer { flex-direction: column; gap: 4px; }
+.app-shell { max-width: 1440px; margin: auto; padding: 0 40px; min-height: 100dvh; }
+.app-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 92px; border-bottom: 1px solid var(--line); }
+.brand { display: inline-flex; align-items: center; gap: 12px; color: var(--ink); text-decoration: none; font-size: 27px; font-weight: 650; letter-spacing: -1px; min-height: 44px; }
+.brand-mark { display: grid; place-items: center; width: 44px; height: 44px; border: 1px solid var(--line); border-radius: 50%; color: var(--green); background: white; }
+.brand-mark ::deep .rzi { font-size: 25px; }
+.brand-caption { display: block; margin-top: 2px; font-size: 9px; font-weight: 600; color: var(--muted); letter-spacing: 1.7px; }
+.local-note { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 12px; }
+.local-note ::deep .rzi { font-size: 18px; color: var(--green); }
+.app-main { padding-top: 40px; }
+.app-footer { display: flex; justify-content: space-between; gap: 16px; border-top: 1px solid var(--line); margin-top: 40px; padding: 24px 0; color: var(--muted); font-size: 12px; line-height: 1.6; }
+@media (max-width: 1000px) { .app-shell { padding: 0 24px; } }
+@media (max-width: 767px) {
+ .app-shell { padding: 0 16px; }.app-header { min-height: 80px; }
+ .brand { font-size: 25px; gap: 8px; }.brand-caption { font-size: 8px; }
+ .local-note { max-width: 115px; font-size: 12px; }.app-main { padding-top: 28px; }
+ .app-footer { flex-direction: column; gap: 4px; margin-top: 28px; padding: 20px 4px; }
 }
+@media (max-width: 359px) { .app-shell { padding: 0 4px; }.app-header { margin: 0 8px; } }

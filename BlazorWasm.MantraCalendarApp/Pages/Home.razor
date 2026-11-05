@@ -10,9 +10,10 @@
 <PageTitle>Mantra Practice Calendar</PageTitle>
 <header class="practice-header">
     <div class="practice-intro">
-        <p class="eyebrow">A MOMENT FOR YOURSELF</p>
-        <h1>Mantra Practice Calendar</h1>
-        <p class="intro-copy">Make space for your daily practice.<br />Small moments of intention, one day at a time.</p>
+        <p class="eyebrow">MANTRA PRACTICE CALENDAR</p>
+        <h1>Your <span class="title-glyph" aria-hidden="true"><RadzenIcon Icon="spa" /></span> daily practice.</h1>
+        <p class="intro-copy">A little space for your practice. One day at a time.</p>
+        <a class="manage-link" href="#practice-tools" @onclick="FocusTools" @onclick:preventDefault>Manage schedules <RadzenIcon Icon="arrow_forward" aria-hidden="true" /></a>
     </div>
     @if (hasSchedule)
     {
@@ -23,9 +24,53 @@
     </section>
     }
 </header>
+<div class="workspace-grid">
+    <div class="calendar-workspace" id="practice-calendar">
+@if (loading)
+{
+    <p role="status" class="loading-note">Working with your practice journal…</p>
+}
+@if (storageError is not null)
+{
+    <p role="alert" class="storage-error">@storageError</p>
+}
+
+@if (hasSchedule)
+{
+<section class="calendar-panel" aria-labelledby="calendar-heading">
+    <div class="calendar-heading">
+        <div><h2 id="calendar-heading">Your practice calendar</h2><p>Select a day to record your mantras.</p></div>
+        <span class="period-label">@appointments.First().Start.ToString("d MMM") – @appointments.Last().Start.ToString("d MMM yyyy")</span>
+    </div>
+<div class="calendar-surface">
+<RadzenScheduler @key="activeStart" @ref="scheduler" TItem="Appointment" Data="@appointments" StartProperty="Start" EndProperty="End"
+                 TextProperty="Text" Date="@appointments.First().Start" SlotSelect="OnSlotSelect"
+                 AppointmentSelect="OnAppointmentSelect" AppointmentRender="OnAppointmentRender">
+    <Template Context="day">
+        <span class="event-count">@day.Mantras.Count(m => m.IsPracticed)/@day.Mantras.Count</span><span class="event-state">@(day.Mantras.All(m => m.IsPracticed) ? "Completed" : "Pending")</span>
+    </Template>
+    <ChildContent>
+        <RadzenMonthView />
+        <RadzenYearPlannerView StartMonth="Month.January" />
+        <RadzenYearTimelineView StartMonth="Month.January" />
+        <RadzenYearView StartMonth="Month.January" />
+    </ChildContent>
+</RadzenScheduler>
+</div>
+    <div class="calendar-footnote"><span><i class="legend-dot pending" aria-hidden="true"></i> Pending <i class="legend-dot complete" aria-hidden="true"></i> Completed</span><span>Save your practice after each session.</span></div>
+</section>
+}
+else if (!loading)
+{
+    <p class="empty-journal">@(deletedSchedules.Count > 0 ? "No saved schedules. Restore a schedule from Recently deleted above, or create a new one." : "No saved schedules. Choose a practice start date above to create one, or import a backup.")</p>
+}
+
+    </div>
+    <aside @ref="toolsPanel" class="practice-tools" id="practice-tools" aria-label="Schedule and backup tools" tabindex="-1">
+        <div class="tools-heading"><span class="eyebrow">YOUR JOURNAL</span><h2>Make it a practice.</h2><p>Choose your rhythm. Keep your progress.</p></div>
 <section class="saved-schedules" aria-labelledby="saved-schedules-label">
     <label id="saved-schedules-label" for="saved-schedule">Saved schedules</label>
-    <p id="saved-schedule-hint">Choose a saved period to open it and continue your practice.</p>
+    <p id="saved-schedule-hint">Switch periods without losing your progress.</p>
     <select id="saved-schedule" @bind:get="SelectedSchedule" @bind:set="ChooseSavedSchedule"
             aria-describedby="saved-schedule-hint" disabled="@(loading || editing || database is null || storageError is not null || backupText is not null || savedSchedules.Count == 0)">
         @if (savedSchedules.Count == 0)
@@ -68,12 +113,12 @@
         <label for="schedule-start">Practice start date</label>
         <input id="schedule-start" type="date" @bind="draftStart" min="0001-01-01" max="9999-10-02" required disabled="@(loading || editing || backupText is not null)" />
     </div>
-    <p>90 days of practice · Your progress is kept for each start date.</p>
+    <p>Start a new 90-day practice, or reopen a saved period.</p>
     <button type="submit" disabled="@(loading || editing || storageError is not null || backupText is not null)">Use schedule</button>
 </form>
 <section class="backup-panel" aria-labelledby="backup-heading">
     <div class="backup-heading">
-        <div><h2 id="backup-heading">Keep a backup</h2><p>Save your schedules, progress and recovery history to a JSON file.</p></div>
+        <div><h2 id="backup-heading">Backups</h2><p>Save your schedules, progress and recovery history to a JSON file.</p></div>
         <button type="button" class="backup-button" @onclick="ExportBackup" disabled="@(loading || editing || database is null || backupText is not null || storageError is not null || (!hasSchedule && deletedSchedules.Count == 0))">Export backup</button>
     </div>
     <label class="backup-file-label" for="backup-file">Import a backup <span>JSON · up to 5 MiB</span></label>
@@ -92,46 +137,12 @@
     @if (backupError is not null) { <p class="backup-error" role="alert">@backupError</p> }
     @if (backupStatus is not null) { <p class="backup-status" role="status">@backupStatus</p> }
 </section>
-@if (loading)
-{
-    <p role="status" class="loading-note">Working with your practice journal…</p>
-}
-@if (storageError is not null)
-{
-    <p role="alert" class="storage-error">@storageError</p>
-}
-
-@if (hasSchedule)
-{
-<section class="calendar-panel" aria-labelledby="calendar-heading">
-    <div class="calendar-heading">
-        <div><h2 id="calendar-heading">Your practice calendar</h2><p>Select a day to record your mantras.</p></div>
-        <span class="period-label">@appointments.First().Start.ToString("d MMM") – @appointments.Last().Start.ToString("d MMM yyyy")</span>
-    </div>
-<div class="calendar-surface">
-<RadzenScheduler @key="activeStart" @ref="scheduler" TItem="Appointment" Data="@appointments" StartProperty="Start" EndProperty="End"
-                 TextProperty="Text" Date="@appointments.First().Start" SlotSelect="OnSlotSelect"
-                 AppointmentSelect="OnAppointmentSelect" AppointmentRender="OnAppointmentRender">
-    <Template Context="day">
-        <span class="event-count">@day.Mantras.Count(m => m.IsPracticed)/@day.Mantras.Count</span><span class="event-state">@(day.Mantras.All(m => m.IsPracticed) ? "Completed" : "Pending")</span>
-    </Template>
-    <ChildContent>
-        <RadzenMonthView />
-        <RadzenYearPlannerView StartMonth="Month.January" />
-        <RadzenYearTimelineView StartMonth="Month.January" />
-        <RadzenYearView StartMonth="Month.January" />
-    </ChildContent>
-</RadzenScheduler>
+    </aside>
 </div>
-    <div class="calendar-footnote"><span><i class="legend-dot pending" aria-hidden="true"></i> Pending <i class="legend-dot complete" aria-hidden="true"></i> Completed</span><span>Save your practice after each session.</span></div>
-</section>
-}
-else if (!loading)
-{
-    <p class="empty-journal">@(deletedSchedules.Count > 0 ? "No saved schedules. Restore a schedule from Recently deleted above, or create a new one." : "No saved schedules. Choose a practice start date above to create one, or import a backup.")</p>
-}
 
 @code {
+    private ElementReference toolsPanel;
+    private async Task FocusTools() => await toolsPanel.FocusAsync();
     private RadzenScheduler<Appointment> scheduler = default!;
     private List<Appointment> appointments = new();
     private string? storageError;
@@ -443,7 +454,7 @@ else if (!loading)
         args.Attributes["onkeydown"] = EventCallback.Factory.Create<KeyboardEventArgs>(this, e =>
             e.Key is "Enter" or " " ? EditDay(args.Data) : Task.CompletedTask);
         if (args.Data.Mantras.All(m => m.IsPracticed))
-            args.Attributes["style"] = "background-color: #28543c; color: white; border-color: #28543c;";
+            args.Attributes["style"] = "background-color: var(--green); color: white; border-color: var(--green);";
     }
 
     private async Task EditDay(Appointment day)
