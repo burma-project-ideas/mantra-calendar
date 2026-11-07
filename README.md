@@ -170,6 +170,14 @@ specs/                          # Feature specifications and validation records
 DESIGN.md                       # UI design guidelines
 ```
 
+## Deployment
+
+The GitHub repository is connected to the Vercel project **burma-mantra-calendar**.
+Pushes to **main** automatically build and publish the production app at
+[burma-mantra-calendar.vercel.app](https://burma-mantra-calendar.vercel.app/).
+Vercel uses Node.js 24, runs `npm run build`, and serves `dist/` using the
+configuration in [vercel.json](vercel.json). No environment variables are required.
+
 ## Testing
 
 Run the schedule and brand-asset assertions:
