@@ -367,3 +367,4 @@ outputs/
 dist/
 playwright-report/
 test-results/
+.vercel
