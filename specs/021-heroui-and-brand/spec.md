@@ -57,3 +57,19 @@ announcements may fall back to English for Myanmar; visible controls and dates a
 Browser-native date/file dialogs follow OS locale. Keep the same origin to retain journal
 access. Downloads still require the user to save the file. The app is designed for root-path
 hosting and requires a reachable app shell for a fresh load; IndexedDB remains local.
+
+## Complete EN/MM and mobile recheck — 2026-11-07
+
+Rebuilt and ran the production preview at localhost:5094. Unit, branding, original storage
+and both existing HeroUI browser suites passed again. Added HeroUiMyanmar.checks.cjs to
+exercise the complete translated path: practice save, real export, canceled deletion,
+soft-delete/restore, final selected-copy deletion, backup recovery, final empty-history,
+reload and full recovery-history import. English/Myanmar switching and persisted selection
+leave the journal unchanged.
+
+Reviewed Myanmar page screenshots at 320/390/768px and permanent-delete dialogs at 320x640,
+390x844 and 844x390 landscape. No horizontal overflow or broken images; long explanations
+scroll within the dialog while safe and destructive actions remain reachable. Favicon and
+touch-icon requests return 200; brand size/transparency checks pass. No browser page errors.
+All destructive actions used synthetic data in fresh profiles; user data was not accessed.
+Physical mobile hardware, Safari and screen readers were not checked.

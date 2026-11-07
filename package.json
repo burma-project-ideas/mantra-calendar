@@ -8,7 +8,7 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview --host 127.0.0.1 --port 5094 --strictPort",
     "test": "node --test tests/schedule.test.mjs tests/brand.test.mjs",
-    "test:browser": "node tests/HeroUiFlow.checks.cjs && node tests/HeroUiSafety.checks.cjs",
+    "test:browser": "node tests/HeroUiFlow.checks.cjs && node tests/HeroUiSafety.checks.cjs && node tests/HeroUiMyanmar.checks.cjs",
     "brand": "node scripts/brand.mjs"
   },
   "dependencies": {
