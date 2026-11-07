@@ -4,6 +4,7 @@ import {
   Calendar,
   Card,
   Chip,
+  Dropdown,
   Form,
   Input,
   Label,
@@ -22,7 +23,8 @@ import {
   CalendarDays,
   Check,
   CheckCheck,
-  ChevronRight,
+  ArrowRight,
+  Menu,
   Download,
   Flower2,
   FolderHeart,
@@ -46,6 +48,13 @@ import { Choice, EmptyState, Notice } from "./ui";
 import { ConfirmDialog, type Confirmation } from "./ConfirmDialog";
 import { PracticeDialog } from "./PracticeDialog";
 
+const navigation = [
+  { id: "calendar", label: "Calendar", Icon: CalendarDays },
+  { id: "journal-tools", label: "Saved schedules", Icon: FolderHeart },
+  { id: "backups", label: "Backups", Icon: ArchiveRestore },
+  { id: "recovery", label: "Recovery history", Icon: Trash2 },
+];
+
 export default function App() {
   const [language, setLanguage] = useState<Language>("mm"),
     [ready, setReady] = useState(false),
@@ -63,6 +72,13 @@ export default function App() {
     [editingDate, setEditingDate] = useState<string | null>(null),
     [confirmation, setConfirmation] = useState<Confirmation | null>(null);
   const [selectedCopy, setSelectedCopy] = useState("");
+  const [activeSection, setActiveSection] = useState("calendar");
+  function goToSection(id: string) {
+    setActiveSection(id);
+    const target = document.getElementById(id);
+    target?.scrollIntoView({ behavior: "smooth" });
+    requestAnimationFrame(() => target?.focus({ preventScroll: true }));
+  }
   const [importPreview, setImportPreview] = useState<{
     text: string;
     preview: {
@@ -431,7 +447,7 @@ export default function App() {
         <Link href="#calendar" className="skip-link">
           {t("Skip to calendar")}
         </Link>
-        <aside className="sidebar">
+        <header className="app-navigation">
           <Link
             href="#calendar"
             className="brand"
@@ -447,74 +463,72 @@ export default function App() {
               mantra<small>{t("A DAILY PRACTICE")}</small>
             </span>
           </Link>
-          <div className="sidebar-section-label">{t("YOUR JOURNAL")}</div>
-          <nav aria-label={t("Journal tools")}>
-            <Link href="#calendar" className="nav-item active">
-              <CalendarDays size={19} />
-              {t("Calendar")}
-              <ChevronRight size={15} />
-            </Link>
-            <Link href="#journal-tools" className="nav-item">
-              <FolderHeart size={19} />
-              {t("Saved schedules")}
-            </Link>
-            <Link href="#backups" className="nav-item">
-              <ArchiveRestore size={19} />
-              {t("Backups")}
-            </Link>
-            <Link href="#recovery" className="nav-item">
-              <Trash2 size={18} />
-              {t("Recovery history")}
-              {deleted.length > 0 && (
-                <Chip size="sm" variant="soft">
-                  {deleted.length}
-                </Chip>
-              )}
-            </Link>
+          <nav className="desktop-navigation" aria-label={t("Journal tools")}>
+            {navigation.map(({ id, label, Icon }) => (
+              <Link
+                key={id}
+                href={`#${id}`}
+                onPress={() => setActiveSection(id)}
+                className={`nav-item ${activeSection === id ? "active" : ""}`}
+              >
+                <Icon size={16} />
+                {t(label)}
+                {id === "recovery" && deleted.length > 0 && (
+                  <Chip size="sm" variant="soft">
+                    {deleted.length}
+                  </Chip>
+                )}
+              </Link>
+            ))}
           </nav>
-          <div className="sidebar-note">
-            <div className="local-icon">
-              <ShieldCheck size={20} />
-            </div>
-            <strong>{t("Saved locally")}</strong>
-            <p>{t("No account needed. Your practice stays yours.")}</p>
-            <span>
-              <span className="status-dot" />
-              {t("Stored in this browser")}
+          <div className="topbar-tools">
+            <span className="storage-chip">
+              <ShieldCheck size={15} />
+              {t("Saved locally")}
             </span>
+            <Choice
+              id="ui-language"
+              label={t("Language")}
+              value={language}
+              items={[
+                { id: "mm", label: "မြန်မာ" },
+                { id: "en", label: "English" },
+              ]}
+              onChange={(value) => void changeLanguage(value)}
+              disabled={
+                !ready ||
+                busy ||
+                !!confirmation ||
+                !!editingDate ||
+                !!importPreview
+              }
+            />
           </div>
-        </aside>
+          <div className="mobile-navigation">
+            <Dropdown>
+              <Dropdown.Trigger
+                className="button mobile-menu-trigger"
+                aria-label={t("Open navigation")}
+              >
+                <Menu size={19} />
+              </Dropdown.Trigger>
+              <Dropdown.Popover>
+                <Dropdown.Menu
+                  aria-label={t("Journal tools")}
+                  onAction={(key) => goToSection(String(key))}
+                >
+                  {navigation.map(({ id, label, Icon }) => (
+                    <Dropdown.Item key={id} id={id} textValue={t(label)}>
+                      <Icon size={18} />
+                      <Label>{t(label)}</Label>
+                    </Dropdown.Item>
+                  ))}
+                </Dropdown.Menu>
+              </Dropdown.Popover>
+            </Dropdown>
+          </div>
+        </header>
         <main className="main-workspace">
-          <header className="topbar">
-            <div className="breadcrumb">
-              <span>mantra</span>
-              <ChevronRight size={14} />
-              {t("Practice journal")}
-            </div>
-            <div className="topbar-tools">
-              <span className="storage-chip">
-                <ShieldCheck size={15} />
-                {t("Saved locally")}
-              </span>
-              <Choice
-                id="ui-language"
-                label={t("Language")}
-                value={language}
-                items={[
-                  { id: "mm", label: "မြန်မာ" },
-                  { id: "en", label: "English" },
-                ]}
-                onChange={(value) => void changeLanguage(value)}
-                disabled={
-                  !ready ||
-                  busy ||
-                  !!confirmation ||
-                  !!editingDate ||
-                  !!importPreview
-                }
-              />
-            </div>
-          </header>
           <div className="page-content">
             <section className="page-intro">
               <div>
@@ -526,15 +540,14 @@ export default function App() {
                 <p>{t("A quiet space to show up, reflect, and keep going.")}</p>
               </div>
               <Button
-                variant="secondary"
-                onPress={() => {
-                  document
-                    .querySelector("#journal-tools")
-                    ?.scrollIntoView({ behavior: "smooth" });
-                }}
+                className="daily-action"
+                isDisabled={disabled}
+                onPress={() =>
+                  chosen ? openDay(chosen.date) : goToSection("journal-tools")
+                }
               >
-                <Plus size={17} />
-                {t("New schedule")}
+                {chosen ? <ArrowRight size={17} /> : <Plus size={17} />}
+                {t(chosen ? "Continue practice" : "New schedule")}
               </Button>
             </section>
             {error && <Notice error>{t(error)}</Notice>}
@@ -677,7 +690,7 @@ export default function App() {
                         </span>
                       </Card.Footer>
                     </Card>
-                    <Card className="tools-card" id="backups">
+                    <Card className="tools-card" id="backups" tabIndex={-1}>
                       <Card.Header>
                         <div className="section-icon">
                           <ArchiveRestore size={21} />
@@ -795,7 +808,11 @@ export default function App() {
                         </Card.Content>
                       </Card>
                     )}
-                    <Card className="schedule-tools" id="journal-tools">
+                    <Card
+                      className="schedule-tools"
+                      id="journal-tools"
+                      tabIndex={-1}
+                    >
                       <Card.Header>
                         <div>
                           <div className="section-kicker">
@@ -871,7 +888,7 @@ export default function App() {
                         </Form>
                       </Card.Content>
                     </Card>
-                    <Card className="recovery-card" id="recovery">
+                    <Card className="recovery-card" id="recovery" tabIndex={-1}>
                       <Card.Header>
                         <div className="section-icon">
                           <ArchiveRestore size={19} />

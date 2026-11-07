@@ -8,6 +8,8 @@ const t = (text) => messages[text] ?? text;
   try {
     const context = await browser.newContext({
         viewport: { width: 390, height: 844 },
+        isMobile: true,
+        hasTouch: true,
         reducedMotion: "reduce",
         acceptDownloads: true,
       }),
@@ -43,13 +45,11 @@ const t = (text) => messages[text] ?? text;
       return text;
     };
     const importFile = async (text) => {
-      await page
-        .locator("input[type=file]")
-        .setInputFiles({
-          name: "myanmar-backup.json",
-          mimeType: "application/json",
-          buffer: Buffer.from(text),
-        });
+      await page.locator("input[type=file]").setInputFiles({
+        name: "myanmar-backup.json",
+        mimeType: "application/json",
+        buffer: Buffer.from(text),
+      });
       await action("Restore backup", dialog()).click();
       await dialog().waitFor({ state: "hidden" });
       await ready();
@@ -63,6 +63,11 @@ const t = (text) => messages[text] ?? text;
     await page.goto("http://localhost:5094/");
     await ready();
     assert.equal(await page.locator("html").getAttribute("lang"), "my");
+    await page
+      .getByRole("button", { name: "ရွတ်ဖတ်မှု ဆက်ရန်", exact: true })
+      .tap();
+    await action("Cancel", dialog()).click();
+    await dialog().waitFor({ state: "hidden" });
     await page.locator('[data-practice-day="2030-01-01"]').click();
     await dialog().locator(".checkbox__content").first().click();
     await action("Save practice", dialog()).click();
@@ -170,6 +175,20 @@ const t = (text) => messages[text] ?? text;
       .waitFor();
     for (const width of [320, 390, 768]) {
       await page.setViewportSize({ width, height: 844 });
+      if (width === 320) {
+        await page
+          .getByRole("button", {
+            name: "သွားလိုသော နေရာကို ရွေးရန်",
+            exact: true,
+          })
+          .tap();
+        await page
+          .getByRole("menuitem", { name: t("Saved schedules"), exact: true })
+          .tap();
+        await page.waitForFunction(
+          () => document.activeElement?.id === "journal-tools",
+        );
+      }
       assert.ok(
         await page.evaluate(
           () => document.documentElement.scrollWidth <= innerWidth,

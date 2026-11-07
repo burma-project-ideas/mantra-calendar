@@ -16,6 +16,8 @@ React၊ TypeScript နဲ့ HeroUI ကို အသုံးပြုထား
 4. **Saved schedules** ကနေ အရင်သိမ်းထားတဲ့ အစီအစဉ်တွေကို ပြန်ဖွင့်နိုင်ပါတယ်။
 5. **Export backup** နဲ့ JSON ဖိုင်ထုတ်သိမ်းထားပြီး နောက်မှ **Import a backup** နဲ့ ပြန်ယူနိုင်ပါတယ်။
 
+နေ့စဉ် အသုံးပြုရာတွင် **Continue practice** ကနေ ရွေးထားသော နေ့ရက်၏ ရွတ်ဖတ်မှုကို တိုက်ရိုက် မှတ်သားနိုင်ပါသည်။
+
 ## ဘာသာစကား ရွေးချယ်မှု
 
 ပုံမှန်အားဖြင့် **မြန်မာ (MM)** ဘာသာဖြင့် ဖွင့်ပေးပါသည်။ စာမျက်နှာအပေါ်ရှိ ဘာသာစကားရွေးချယ်မှုမှ **English (EN)** သို့ ပြောင်းနိုင်ပြီး ရွေးချယ်မှုကို IndexedDB တွင် သိမ်းထားသောကြောင့် နောက်တစ်ကြိမ် ပြန်ဖွင့်လည်း ဆက်အသုံးပြုနိုင်ပါသည်။ ဘာသာစကားပြောင်းခြင်းက အစီအစဉ်နှင့် ရွတ်ဖတ်မှုမှတ်တမ်းများကို မပြောင်းလဲပါ။
@@ -26,7 +28,7 @@ Calendar controls, month/day names, the practice editor, backup messages and del
 
 ![Desktop calendar with daily progress and schedule tools](docs/images/calendar-desktop.png)
 
-Desktop မှာ ပြက္ခဒိန်နဲ့ မှတ်တမ်းစီမံခန့်ခွဲတဲ့ controls တွေကို ဘေးချင်းယှဉ် ပြထားပါတယ်။ Mobile မှာ ပြက္ခဒိန်ကို အရင်ပြပြီး controls တွေကို အောက်မှာ ပြထားပါတယ်။ Navigation မှ **Saved schedules** ကနေ controls ဆီ တိုက်ရိုက်သွားနိုင်ပါတယ်။
+Desktop မှာ ပြက္ခဒိန်နဲ့ မှတ်တမ်းစီမံခန့်ခွဲတဲ့ controls တွေကို ဘေးချင်းယှဉ် ပြထားပါတယ်။ Mobile မှာ ပြက္ခဒိန်ကို အရင်ပြပြီး controls တွေကို အောက်မှာ ပြထားပါတယ်။ Desktop navigation သို့မဟုတ် mobile menu မှ **Saved schedules**၊ **Backups** နှင့် **Recovery history** ဆီ တိုက်ရိုက်သွားနိုင်ပါတယ်။
 
 ## Features
 
@@ -87,7 +89,7 @@ npm run preview
 
 The production build is written to **dist/**. Serve that directory at the site root. **npm run preview** serves the built app at the same local address; stop the development server before starting preview.
 
-The active interface uses real HeroUI Calendar, Select, Tabs, Modal, Checkbox, ProgressBar, Card, Alert and Button components. Layout styling customizes HeroUI rather than imitating it with another component library.
+The active interface uses real HeroUI Calendar, Select, Tabs, Modal, Checkbox, ProgressBar, Card, Alert and Button components. The white/charcoal design uses soft gray rounded surfaces, pill controls and restrained press feedback. HeroUI continues to provide the accessible component behavior.
 
 ### Existing journals
 

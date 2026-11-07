@@ -109,6 +109,12 @@ const path = require("node:path");
     await page.reload();
     await waitReady();
     assert.match(await page.locator("#ui-language").innerText(), /English/);
+    await page
+      .getByRole("button", { name: "Continue practice", exact: true })
+      .click();
+    await dialog().getByRole("button", { name: "Cancel", exact: true }).click();
+    await dialog().waitFor({ state: "hidden" });
+    assert.deepEqual(await snapshot(), before);
     await page.locator('[data-practice-day="2030-01-01"]').click();
     await dialog().locator(".checkbox__content").nth(1).click();
     await dialog()
@@ -136,6 +142,26 @@ const path = require("node:path");
     await fs.mkdir(output, { recursive: true });
     for (const width of [1440, 1024, 768, 390, 320]) {
       await page.setViewportSize({ width, height: 900 });
+      if (width === 320) {
+        await page
+          .getByRole("button", { name: "Open navigation", exact: true })
+          .click();
+        await page
+          .getByRole("menuitem", { name: "Backups", exact: true })
+          .click();
+        await page.waitForFunction(
+          () => document.activeElement?.id === "backups",
+        );
+        await page
+          .getByRole("button", { name: "Open navigation", exact: true })
+          .click();
+        await page
+          .getByRole("menuitem", { name: "Calendar", exact: true })
+          .click();
+        await page.waitForFunction(
+          () => document.activeElement?.id === "calendar",
+        );
+      }
       assert.ok(
         await page.evaluate(
           () => document.documentElement.scrollWidth <= innerWidth,

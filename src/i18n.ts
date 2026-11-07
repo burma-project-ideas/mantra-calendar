@@ -3,6 +3,8 @@ export type Language = "en" | "mm";
 const messages: Record<string, string> = {
   ...original,
   "Practice journal": "ရွတ်ဖတ်မှုမှတ်တမ်း",
+  "Continue practice": "ရွတ်ဖတ်မှု ဆက်ရန်",
+  "Open navigation": "သွားလိုသော နေရာကို ရွေးရန်",
   "Your journey, one day at a time.":
     "နေ့ရက်တိုင်းမှာ မိမိ၏ ရွတ်ဖတ်မှုခရီးစဉ်။",
   "A quiet space to show up, reflect, and keep going.":
