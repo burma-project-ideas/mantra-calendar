@@ -448,4 +448,3 @@ export async function restoreBackup(text) {
     });
     return restored;
 }
-

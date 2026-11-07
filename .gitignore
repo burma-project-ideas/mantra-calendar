@@ -364,3 +364,6 @@ FodyWeavers.xsd
 # Local work and backups
 work/
 outputs/
+dist/
+playwright-report/
+test-results/

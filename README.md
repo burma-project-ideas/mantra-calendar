@@ -1,8 +1,10 @@
+<p><img src="public/brand/logo.png" alt="Mantra lotus calendar logo" width="72" height="72" /></p>
+
 # Mantra Practice Calendar — နေ့စဉ် ဂုဏ်တော်ရွတ်ဖတ်မှု မှတ်တမ်း
 
 နေ့စဉ် ဂုဏ်တော်ရွတ်ဖတ်မှုကို ပြက္ခဒိန်ပေါ်မှာ မှတ်သားပြီး မိမိလေ့ကျင့်မှုကို ပြန်ကြည့်နိုင်ဖို့ ရေးထားတဲ့ Web App ဖြစ်ပါတယ်။ စတင်မယ့်ရက်ကို ကိုယ်တိုင်ရွေးချယ်ပြီး ရက် ၉၀ အတွက် သတ်မှတ်ထားတဲ့ ဂုဏ်တော်အစီအစဉ်အတိုင်း အသုံးပြုနိုင်ပါတယ်။
 
-C# နဲ့ Blazor WebAssembly ကို လေ့လာသူတွေအတွက် ပြက္ခဒိန် UI၊ နေ့စဉ်မှတ်တမ်း၊ IndexedDB နဲ့ browser ထဲမှာ data သိမ်းဆည်းခြင်း၊ JSON backup နဲ့ data ပြန်ယူခြင်းတို့ကို လေ့လာနိုင်တဲ့ project တစ်ခုလည်း ဖြစ်ပါတယ်။
+React၊ TypeScript နဲ့ HeroUI ကို အသုံးပြုထားပြီး ပြက္ခဒိန် UI၊ နေ့စဉ်မှတ်တမ်း၊ IndexedDB နဲ့ browser ထဲမှာ data သိမ်းဆည်းခြင်း၊ JSON backup နဲ့ data ပြန်ယူခြင်းတို့ကို လေ့လာနိုင်တဲ့ project တစ်ခုလည်း ဖြစ်ပါတယ်။
 
 ## Summary
 
@@ -24,7 +26,7 @@ Calendar controls, month/day names, the practice editor, backup messages and del
 
 ![Desktop calendar with daily progress and schedule tools](docs/images/calendar-desktop.png)
 
-Desktop မှာ ပြက္ခဒိန်နဲ့ မှတ်တမ်းစီမံခန့်ခွဲတဲ့ controls တွေကို ဘေးချင်းယှဉ် ပြထားပါတယ်။ Mobile မှာ ပြက္ခဒိန်ကို အရင်ပြပြီး controls တွေကို အောက်မှာ ပြထားပါတယ်။ **Manage schedules** ကနေ controls ဆီ တိုက်ရိုက်သွားနိုင်ပါတယ်။
+Desktop မှာ ပြက္ခဒိန်နဲ့ မှတ်တမ်းစီမံခန့်ခွဲတဲ့ controls တွေကို ဘေးချင်းယှဉ် ပြထားပါတယ်။ Mobile မှာ ပြက္ခဒိန်ကို အရင်ပြပြီး controls တွေကို အောက်မှာ ပြထားပါတယ်။ Navigation မှ **Saved schedules** ကနေ controls ဆီ တိုက်ရိုက်သွားနိုင်ပါတယ်။
 
 ## Features
 
@@ -45,13 +47,13 @@ The supplied sequence covers **90 days and 162 individual mantra entries**. Its 
 
 | Part | Technology |
 | --- | --- |
-| Language | C# |
-| Application | .NET 8, Blazor WebAssembly |
-| UI components | Radzen.Blazor |
+| Language | TypeScript / JavaScript |
+| Application | React 19, Vite |
+| UI components | HeroUI 3 throughout the active interface |
 | Browser storage | Native IndexedDB |
 | Backup files | JSON |
-| Styling | CSS, self-hosted Geist with Burmese font fallback |
-| Checks | .NET console assertions and Playwright browser scripts |
+| Styling | HeroUI theme tokens, Tailwind CSS 4, self-hosted Geist |
+| Checks | Node assertions, Playwright/Edge, optional original C# sequence checks |
 
 No backend server or account is required for saving practice data. The development server serves the application; journal data is stored in the browser.
 
@@ -59,7 +61,7 @@ No backend server or account is required for saving practice data. The developme
 
 ### Requirements
 
-- .NET 8 SDK, or a compatible newer SDK.
+- Node.js 22.12 or newer (tested with Node.js 24).
 - A modern browser with IndexedDB enabled.
 - Git to clone the repository.
 
@@ -68,19 +70,30 @@ No backend server or account is required for saving practice data. The developme
 Clone this repository, open its root directory, then run:
 
 ```sh
-dotnet restore BlazorWasm.MantraCalendar.sln
-dotnet run --project BlazorWasm.MantraCalendarApp --launch-profile http
+npm ci
+npm run dev
 ```
 
 Open [http://localhost:5094](http://localhost:5094).
 
 A fresh journal starts with the device's current date. To use a different period, choose a start date and select **Use schedule**. Existing periods retain their progress when you switch.
 
-### Build
+### Production build
 
 ```sh
-dotnet build BlazorWasm.MantraCalendar.sln
+npm run build
+npm run preview
 ```
+
+The production build is written to **dist/**. Serve that directory at the site root. **npm run preview** serves the built app at the same local address; stop the development server before starting preview.
+
+The active interface uses real HeroUI Calendar, Select, Tabs, Modal, Checkbox, ProgressBar, Card, Alert and Button components. Layout styling customizes HeroUI rather than imitating it with another component library.
+
+### Existing journals
+
+Keep the same browser profile and site address, including the port, to keep using an existing journal. The IndexedDB module, database name and backup format are unchanged. **Do not clear site data to update the UI.** The old Blazor interface and its historical UI tests are retained under **legacy/** as reference; the active app runs with npm.
+
+The production frontend does not promise offline reloads. A compatibility service worker retires the old Blazor shell cache without touching IndexedDB.
 
 ## Backup & Restore
 
@@ -134,47 +147,65 @@ Practice data stays in the current browser profile and site address. There are n
 ## Project Structure
 
 ```text
-BlazorWasm.MantraCalendarApp/
-├── Layout/                     # Application shell
-├── Pages/                      # Calendar, practice editor and delete dialogs
-├── Services/                   # Mantra sequence and schedule models
-└── wwwroot/
-    ├── css/                    # Shared styling
-    ├── fonts/                  # Self-hosted Geist and its license
-    └── js/practice-db.js        # IndexedDB, backups and recovery
-tests/                          # Schedule, storage and browser checks
+src/
+├── App.tsx                     # HeroUI calendar and journal workspace
+├── PracticeDialog.tsx          # Daily mantra recording
+├── ConfirmDialog.tsx           # Delete confirmation and live backup checks
+├── data/                       # Original mantra sequence and Myanmar translations
+├── schedule.mjs                # Date shifting and independent daily progress
+└── styles.css                  # HeroUI theme and responsive layout
+public/
+├── brand/                      # Logo, favicon, touch and app icons
+├── fonts/                      # Self-hosted Geist and its license
+└── js/practice-db.js            # Preserved IndexedDB and backup implementation
+docs/brand/                     # Generated logo master, prompt and reproduction notes
+scripts/brand.mjs               # Reproducible logo sizes
+tests/                          # Schedule, branding, storage and browser checks
+legacy/                         # Previous Blazor interface, retained for reference
 specs/                          # Feature specifications and validation records
-.specify/                       # Spec Kit configuration and templates
-.agents/skills/                 # Codex Spec Kit workflows
 DESIGN.md                       # UI design guidelines
 ```
 
 ## Testing
 
-Run the package-free schedule checks:
+Run the schedule and brand-asset assertions:
+
+```sh
+npm test
+```
+
+For full browser checks, install Microsoft Edge and keep the app running at **http://localhost:5094**. Playwright is included in the development dependencies:
+
+```sh
+npm run test:browser
+```
+
+These checks use fresh browser contexts and synthetic schedules. They cover existing-journal compatibility, default Myanmar and EN persistence, keyboard practice entry, 320–1440px layouts, backup files, final single/bulk deletion, recovery after reload, delayed checks, failed exports, failed saves and cross-tab warnings. They do not use your existing browser journal. Screenshots are written to the Git-ignored **outputs/** directory.
+
+The original IndexedDB assertions remain in **tests/IndexedDb.checks.js** and run as part of the browser suite. They refuse to run against an existing journal.
+
+Optional original sequence comparison, requiring .NET 8 or newer:
 
 ```sh
 dotnet run --project tests/MantraCalendar.Checks
 ```
 
-For browser checks, install Node.js and Microsoft Edge, keep the app running at **http://localhost:5094**, and make **playwright-core** available to Node. For example, from the repository root:
-
-```sh
-npm install --no-save --package-lock=false playwright-core
-node tests/ResponsiveUi.checks.cjs
-node tests/Language.checks.cjs
-node tests/DialogBackup.checks.cjs
-node tests/CompleteDeleteFlow.checks.cjs
-```
-
-These scripts use fresh browser contexts and synthetic schedules. They cover responsive layouts, recording practice, backup warnings, export/import, final delete confirmations and recovery after reload. They do not use your existing browser journal. Screenshots are written to the Git-ignored **outputs/** directory.
-
-Additional IndexedDB assertions are in **tests/IndexedDb.checks.js**. Run its **checkIndexedDb()** function from a fresh isolated browser context on the app's origin; it refuses to run if a journal already exists.
+This verifies every exported mantra name, description and repetition count against the original C# sequence retained in **legacy/**.
 
 Feature details and validation records are in [specs/](specs/). The interface rules are in [DESIGN.md](DESIGN.md).
+
+## Logo & Identity
+
+The lotus/calendar logo is used in the navigation, footer, empty states, browser favicon, Apple touch icon, app manifest and this README. The generated master, final prompt and asset roles are documented in [docs/brand/](docs/brand/README.md).
+
+Regenerate the icon sizes with:
+
+```sh
+npm run brand
+```
 
 ## Contributing
 
 Bug reports, documentation improvements and pull requests are welcome. Include reproduction steps for bugs, and run the checks relevant to your change. Changes to persistence, backup or deletion behavior should include checks that existing progress remains recoverable.
 
-The bundled Geist font includes its [SIL Open Font License](BlazorWasm.MantraCalendarApp/wwwroot/fonts/OFL.txt).
+The bundled Geist font includes its [SIL Open Font License](public/fonts/OFL.txt).

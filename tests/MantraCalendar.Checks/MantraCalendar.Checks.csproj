@@ -6,6 +6,7 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="../../BlazorWasm.MantraCalendarApp/Services/MantraScheduleService.cs" Link="MantraScheduleService.cs" />
+    <Compile Include="../../legacy/BlazorWasm.MantraCalendarApp/Services/MantraScheduleService.cs" Link="MantraScheduleService.cs" />
+    <None Include="../../src/data/mantras.json" Link="mantras.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

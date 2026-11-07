@@ -1,56 +1,75 @@
-# Design System: Mantra Practice Calendar
+# Design System: Mantra / HeroUI
 
-## 1. Visual Theme & Atmosphere
-A quiet working journal, rather than a landing page. Balanced density (5/10), asymmetric
-layout (6/10), restrained fluid motion (3/10). The calendar is the main working surface;
-schedule management and backup controls form a narrow, clearly separated side column.
-The first screen should invite recording practice rather than managing files.
+## 1. Atmosphere and hierarchy
 
-## 2. Color Palette & Roles
-- Paper (#F8FAF9): neutral canvas, consistent cool undertone.
-- Surface (#FFFFFF): calendar and dialog surfaces.
-- Charcoal Ink (#202927): headings and body text; never pure black.
-- Slate (#61716B): secondary text with readable contrast.
-- Mist (#DCE5E0): dividers and input borders.
-- Forest (#315D4A): the single accent, selected states and primary actions.
-- Forest Wash (#EDF3EF): active-day backgrounds and backup information.
-Destructive/error states use charcoal, explicit wording and warning icons rather than
-adding a second decorative accent. No purple, neon, gradients or glow shadows.
+A quiet daily journal: forest green, clean surfaces, restrained typography and actual
+practice data. The active application uses React 19 and HeroUI 3. All visible controls,
+calendar cells, selectors, tabs, cards, progress, alerts and dialogs are HeroUI components.
+Custom CSS controls composition and theme; it does not recreate a separate UI kit.
 
-## 3. Typography Rules
-Self-hosted Geist variable sans-serif, 400–700, with Myanmar Text for Burmese glyphs.
-Display: clamp(1.75rem, 3.5vw, 2.75rem), tight tracking and 1.15 leading. Body: 14–16px,
-1.6 leading, max 65ch. Metadata: 12px minimum; dates and counts use tabular figures.
-No Inter or serif type. Preserve the actual Burmese mantra text.
+Desktop has a narrow journal navigation rail, a compact header, a wide progress summary
+and an asymmetric calendar/detail grid. The selected-day card invites the next useful
+action. Schedule tools, recovery and backups remain discoverable without dominating the
+practice calendar. Navigation collapses into labelled icon links on mobile.
 
-## 4. Component Stylings
-Buttons: 44px minimum height, 10px corners, Forest primary, outlined secondary. Dark,
-plainly named destructive confirmations. Hover changes tint; active translates 1px.
-Surfaces: a single elevated calendar and dialog; sidebar sections use dividing rules,
-not a stack of floating cards. Inputs have persistent labels, 44px height and readable
-helper/error text. Backup checking uses an inline status stripe with subtle opacity
-motion; initial loading uses a skeleton, never an indeterminate circular spinner.
-Dialogs keep the safe action first and focused, and remain scrollable at small heights.
-Errors stay inline and distinguishable by wording, border and icon, not color alone.
+## 2. Identity and palette
 
-## 5. Layout Principles
-Maximum shell width 1440px. Header: compact brand and truthful browser-local storage note.
-Intro: left-aligned title with a small inline botanical glyph; actual completion data on
-the right. Main grid: flexible calendar plus 320px journal tools, 28px gap. Calendar comes
-first in both DOM and visual reading order. Below 768px: strict single column, calendar
-then tools; an accessible Manage schedules link jumps to the tools. No overlapping
-content, fixed-height page sections, equal three-card rows or horizontal page overflow.
-Small-screen calendar toolbar wraps intentionally. All controls retain labels and focus.
+The mark combines a three-petal lotus with a calendar outline. Use the generated assets
+in `public/brand/`; do not substitute a font icon or unrelated lotus illustration.
+The transparent master and generation prompt are retained in `docs/brand/`.
 
-## 6. Motion & Interaction
-160–220ms transform/opacity transitions with cubic-bezier(.22,1,.36,1), approximating a
-restrained spring. Short staggered entrance for the two main regions. Only a busy status
-loops; idle calendar cells remain quiet so motion never competes with reading practice.
-Reduced-motion disables animation/transition. Every refresh preserves focus and content
-dimensions. No animation of layout geometry. No framework or animation dependency.
+- Forest `#315D4A`: HeroUI accent, primary actions, logo and progress.
+- Canvas `#F7F9F6`: the page background.
+- White `#FFFFFF`: cards, dialogs and menus.
+- Ink `#26382E`: primary text.
+- Readable sage `#596C59`: secondary text on light surfaces.
+- Line `#E3E9E2`: structural borders.
+- Soft forest `#F0F5EC`: the progress surface and active practice states.
+- Muted red `#A84440`: destructive confirmation and error semantics only.
 
-## 7. Anti-Patterns (Banned)
-No emojis, pure black, decorative gradients, neon shadows, serif dashboards, oversized
-marketing hero, filler links, stock photos, fictional statistics, unlabelled icons, hidden
-destructive controls, custom cursors, floating labels or duplicated card chrome. No changes
-to IndexedDB, backup format, mantra sequence or deletion safety for visual convenience.
+No decorative gradients, neon, stock images or fake statistics.
+
+## 3. Typography
+
+Self-hosted Geist with Myanmar Text/system Burmese fallbacks. Titles are restrained,
+25–34px in English and 23–30px in Myanmar. Burmese text has relaxed line-height and no
+negative tracking. Counts use tabular figures. Keep safety explanations at 14px with
+comfortable leading. Small dates and badges support the hierarchy rather than replacing
+plain labels. Localize visible date names explicitly when platform locale data falls back.
+
+## 4. Components
+
+HeroUI Calendar provides keyboard navigation and selection; each practice cell adds the
+real completed/total count. Month is the main working view. Planner, Timeline and Year
+show the same schedule grouped for scanning. HeroUI Select handles period, recovery and
+language choices. Checkbox handles draft practice selection. Changes commit through the
+existing IndexedDB module before completion is shown.
+
+Cards use 14–17px corners, subtle borders and quiet shadows. Buttons have tactile feedback
+and 44px targets. Primary actions use forest; destructive confirmation uses HeroUI danger.
+Safety dialogs focus Keep, show coverage warnings, disable deletion during checks/exports,
+and keep errors inside the open dialog. Initial loading uses HeroUI Skeleton. A short-lived
+HeroUI Spinner accompanies checking text. Never hide safety meaning in color alone.
+
+## 5. Responsive composition
+
+Desktop: 224px navigation, fluid workspace, 316px detail column. At intermediate widths,
+detail cards wrap below the calendar. Below 768px, every content region becomes a single
+column, the navigation becomes a compact header, and calendar progress reduces to readable
+counts. At 320px, reserve enough calendar width for seven touchable cells. No horizontal
+page overflow. Dialogs scroll within the viewport and their actions wrap on narrow screens.
+
+## 6. Motion and accessibility
+
+Keep HeroUI's focus, press, keyboard and overlay behavior. Use transform/opacity for small
+feedback; do not add perpetual decorative movement. Honor prefers-reduced-motion. Preserve
+focus across status refreshes. Keep and Escape cancel confirmation without modifying data.
+Use real labels, accessible icon names, a skip link and explicit validation text.
+
+## 7. Invariants
+
+Myanmar is the default and English is available. Language selection stays in IndexedDB.
+The 90-day, 162-entry sequence, journal keys and version 1/2 backup behavior must remain
+compatible. The public storage module is byte-for-byte identical to the archived version.
+Never clear IndexedDB to deploy a redesign. Do not add accounts, cloud storage, localStorage
+writes, fabricated streaks, forced backups, paid templates or unrelated product features.

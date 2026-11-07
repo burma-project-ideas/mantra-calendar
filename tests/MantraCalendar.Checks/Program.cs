@@ -47,3 +47,20 @@ try
 }
 catch (ArgumentOutOfRangeException) { }
 Console.WriteLine("PASS: selectable start date, year boundary, leap day and date range validation.");
+
+using var sequence = JsonDocument.Parse(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "mantras.json")));
+Check(sequence.RootElement.GetArrayLength() == days.Count, "React sequence has a different number of days.");
+for (var day = 0; day < days.Count; day++)
+{
+    var entries = sequence.RootElement[day];
+    Check(entries.GetArrayLength() == days[day].Mantras.Count, $"React mantra count differs on day {day + 1}.");
+    for (var mantra = 0; mantra < days[day].Mantras.Count; mantra++)
+    {
+        var expected = days[day].Mantras[mantra];
+        Check(entries[mantra].GetProperty("name").GetString() == expected.Name
+            && entries[mantra].GetProperty("description").GetString() == expected.Description
+            && entries[mantra].GetProperty("count").GetInt32() == expected.Count,
+            $"React mantra entry differs on day {day + 1}, entry {mantra + 1}.");
+    }
+}
+Console.WriteLine("PASS: React data matches every mantra name, description and count in the original C# sequence.");
